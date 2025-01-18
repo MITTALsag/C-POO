@@ -6,7 +6,8 @@
 int main(void)
 {
     runTests();
-    Entier ent = (12345678);
+    Entier ent = (12);
     Entier E = factorial(ent);
+    std::cout << E << std::endl;
 
 }

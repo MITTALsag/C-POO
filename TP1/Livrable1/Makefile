@@ -1,10 +1,10 @@
 CXX = g++
 CXXFLAGS= -std=c++17 -Wall -Wextra -Werror
 
-SRC = Rationnel.cpp Entier.cpp
-OBJ = Rationnel.o Entier.o
+SRC = Rationnel.cpp
+OBJ = Rationnel.o
 
-EXEC = Livrable1 Livrable2 Livrable3
+EXEC = Livrable1
 all : $(EXEC)
 
 
