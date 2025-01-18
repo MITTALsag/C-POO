@@ -65,6 +65,12 @@ bool Entier::isNeg() const//retourne vrais si l'entier est négatif
 }
 
 
+Entier Entier::abs() const {
+    Entier result = *this;
+    result.isNegative = false;
+    return result;
+}
+
 /*###############################################################*/
 /**********************/
 /* Opérations de base */
@@ -285,6 +291,140 @@ Entier Entier::operator*(const Entier& other) const {
 */
 Entier Entier::operator*(const uint64_t n) const {
     return *this * Entier(n); // Utilise l'opérateur de multiplication pour deux entiers
+}
+
+/*
+*Operation de division entiere par un Entier
+*/
+Entier Entier::operator/(const Entier& other) const {
+    // Vérifie si le diviseur est zéro et lève une exception si c'est le cas
+    if (other.digits.empty() || (other.digits.size() == 1 && other.digits[0] == 0)) {
+        throw std::runtime_error("Division by zero");
+    }
+
+    // Initialise le résultat
+    Entier result;
+    result.digits.clear();
+    result.isNegative = (isNegative != other.isNegative); // Détermine le signe du résultat
+
+    // Copie le dividende et le diviseur en ignorant leurs signes
+    Entier dividend(*this);
+    dividend.isNegative = false;
+    Entier divisor(other);
+    divisor.isNegative = false;
+
+    // Initialise le quotient
+    Entier quotient;
+    quotient.digits.clear();
+    quotient.isNegative = false;
+
+    // Boucle de division
+    while (dividend > divisor || dividend == divisor) { //pour faire dividend >= divisor
+        dividend = dividend - divisor; // Soustrait le diviseur du dividende
+        quotient = quotient + 1; // Incrémente le quotient
+    }
+
+    // Assigne les chiffres du quotient au résultat
+    result.digits = quotient.digits;
+    result.normalize(); // Normalise le résultat
+    return result; // Retourne le résultat
+}
+
+/*
+*Operation de division entiere par un int
+*/
+Entier Entier::operator/(const uint64_t n) const {
+    // Vérifie si le diviseur est zéro et lève une exception si c'est le cas
+    if (n == 0) {
+        throw std::runtime_error("Division by zero");
+    }
+
+    return *this / Entier(n);
+}
+
+Entier Entier::operator%(const Entier& other) const
+{
+    if (other.digits.empty() || (other.digits.size() == 1 && other.digits[0] == 0)) {
+        throw std::invalid_argument("Division by zero");
+    }
+
+    Entier quotient = *this / other;
+    Entier remainder = *this - (quotient * other);
+
+    remainder.isNegative = isNegative; // Conserver le signe du dividende
+    remainder.normalize();
+
+    return remainder;
+}
+
+Entier Entier::operator%(const uint64_t n) const
+{
+    return *this % Entier(n);
+}
+
+std::string Entier::divideReal(const Entier& other) const {
+    if (other.digits.empty() || (other.digits.size() == 1 && other.digits[0] == 0)) {
+        throw std::invalid_argument("Division by zero");
+    }
+
+    Entier quotient = *this / other;
+    Entier remainder = *this - (quotient * other); // == *this % other
+
+    std::string result = quotient.toString();
+
+    if (!remainder.digits.empty()) {
+        result += ".";
+        remainder = remainder.abs();
+        Entier divisor = other.abs();
+
+        std::vector<uint8_t> fractionalPart;
+        for (int i = 0; i < 10; ++i) { // Limite à 10 chiffres après la virgule
+            remainder = remainder * 10;
+            Entier digit = remainder / divisor;
+            fractionalPart.push_back(digit.digits[0]);
+            remainder = remainder - (digit * divisor); // == remainder % divisor
+        }
+
+        for (auto it = fractionalPart.begin(); it != fractionalPart.end(); ++it) {
+            result += static_cast<char>(*it + '0');
+        }
+    }
+
+    return result;
+}
+
+// Fonction pour trouver le PGCD
+Entier Entier::gcd_Entier(const Entier& other) const {
+    Entier a = *this;
+    Entier b = other;
+
+    while (!(b == Entier(0))) {
+        Entier temp = b;
+        b = a % b;
+        a = temp;
+    }
+
+    return a.abs();
+}
+
+/*
+* Operateur d'egalité
+*/
+bool Entier::operator==(const Entier& other) const {
+    if (isNegative != other.isNegative || digits != other.digits) {
+        return false;
+    }
+    return true;
+}
+
+
+
+/*
+* Operateur d'egalité
+*/
+bool Entier::operator==(const uint64_t n) const {
+    Entier other(n);
+    return *this == other;
 }
 
 

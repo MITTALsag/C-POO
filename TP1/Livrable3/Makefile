@@ -1,5 +1,5 @@
-CXX = g++
-CXXFLAGS= -std=c++17 -Wall -Wextra -Werror
+CXX = clang++
+CXXFLAGS= -std=c++17 -Wall -Wextra -Werror -g
 
 SRC = Rationnel.cpp Entier.cpp
 OBJ = Rationnel.o Entier.o

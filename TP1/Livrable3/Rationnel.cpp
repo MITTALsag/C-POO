@@ -1,6 +1,6 @@
 #include <iostream>
-#include <numeric> // Pour std::gcd
 #include "Rationnel.hpp"
+#include "Entier.hpp"
 
 using namespace std;
 
@@ -16,8 +16,8 @@ using namespace std;
 */
 Rationnel::Rationnel()
 {
-    numerateur = 0;
-    denominateur = 1;
+    numerateur = Entier(0);
+    denominateur = Entier(1);
 }
 
 /*
@@ -26,7 +26,7 @@ Rationnel::Rationnel()
 * et simplifie la fraction.
 * Vérifie que le dénominateur n'est pas 0 avant l'initialisation.
 */
-Rationnel::Rationnel(int n, int d) : numerateur(n), denominateur(d)
+Rationnel::Rationnel(Entier n, Entier d) : numerateur(n), denominateur(d)
 {
     if (d == 0) {
         throw invalid_argument("Le dénominateur ne peut pas être zéro.");
@@ -49,7 +49,7 @@ Rationnel::Rationnel(const Rationnel & R) :  numerateur(R.numerateur), denominat
 * Accesseur pour obtenir le numérateur du rationnel
 * Renvoie le numérateur
 */
-int Rationnel::get_numerateur() const
+Entier Rationnel::get_numerateur() const
 {
     return numerateur;
 }
@@ -58,7 +58,7 @@ int Rationnel::get_numerateur() const
 * Accesseur pour obtenir le dénominateur du rationnel
 * Renvoie le dénominateur
 */
-int Rationnel::get_denominateur() const
+Entier Rationnel::get_denominateur() const
 {
     return denominateur;
 }
@@ -91,22 +91,18 @@ void Rationnel::afficher() const
 void Rationnel::simplifie()
 {
     // Récupère le PGCD du numérateur et du dénominateur
-    int pgcd = gcd(numerateur, denominateur);
-    numerateur /= pgcd;
-    denominateur /= pgcd;
-    if (denominateur < 0) { // Garder un dénominateur positif
-        numerateur = -numerateur;
-        denominateur = -denominateur;
-    }
+    Entier pgcd = numerateur.gcd_Entier(denominateur);
+    numerateur = numerateur / pgcd;
+    denominateur = denominateur / pgcd;
 }
 
 /*
 * Renvoie l'approximation flottante du rationnel
 * Divise le numérateur par le dénominateur et renvoie le résultat en tant que double
 */
-double Rationnel::valeur_approx() const
+string Rationnel::valeur_approx() const
 {
-    return static_cast<double>(numerateur) / static_cast<double>(denominateur);
+    return numerateur.divideReal(denominateur);
 }
 
 /*###############################################################*/
@@ -120,7 +116,7 @@ double Rationnel::valeur_approx() const
 */
 void Rationnel::ajouter(int n)
 {
-    numerateur = n * denominateur + numerateur;
+    numerateur = (denominateur * n) + numerateur;
     simplifie();
 }
 
@@ -131,10 +127,10 @@ void Rationnel::ajouter(int n)
 void Rationnel::ajouter(const Rationnel& autre)
 {
     // Récupère le numérateur et le dénominateur du rationnel 'autre'
-    int num_autre = autre.numerateur;
-    int denum_autre = autre.denominateur;
+    Entier num_autre = autre.numerateur;
+    Entier denum_autre = autre.denominateur;
     numerateur = (numerateur * denum_autre) + (num_autre * denominateur);
-    denominateur *= denum_autre;
+    denominateur = denominateur * denum_autre;
     simplifie();
 }
 
@@ -156,8 +152,8 @@ void Rationnel::soustraire(int n)
 void Rationnel::soustraire(const Rationnel& autre)
 {
     // Récupère le numérateur et le dénominateur de l'autre Rationnel
-    int num_autre = autre.numerateur;
-    int denum_autre = autre.denominateur;
+    Entier num_autre = autre.numerateur;
+    Entier denum_autre = autre.denominateur;
     // Ajouter le Rationnel négatif de l'autre
     ajouter(Rationnel(-num_autre, denum_autre));
 }
@@ -168,7 +164,7 @@ void Rationnel::soustraire(const Rationnel& autre)
 */
 void Rationnel::multiplier(int n)
 {
-    numerateur *= n;
+    numerateur = numerateur * n;
     simplifie();
 }
 
@@ -177,8 +173,8 @@ void Rationnel::multiplier(int n)
 */
 void Rationnel::multiplier(const Rationnel& autre)
 {
-    numerateur *= autre.numerateur;
-    denominateur *= autre.denominateur;
+    numerateur = numerateur * autre.numerateur;
+    denominateur = denominateur * autre.denominateur;
     simplifie();
 }
 
@@ -191,7 +187,7 @@ void Rationnel::diviser(int n)
     {
         throw invalid_argument("Le dénominateur ne peut pas être zéro.");
     }
-    denominateur *= n;
+    denominateur = denominateur * n;
     simplifie();
 }
 
@@ -203,10 +199,10 @@ void Rationnel::diviser(int n)
 void Rationnel::diviser(const Rationnel& autre)
 {
     
-    int num_autre = autre.numerateur;
-    int denum_autre = autre.denominateur;
-    numerateur *= denum_autre;
-    denominateur *= num_autre;
+    Entier num_autre = autre.numerateur;
+    Entier denum_autre = autre.denominateur;
+    numerateur = numerateur * denum_autre;
+    denominateur = denominateur * num_autre;
     simplifie();
 }
 

@@ -2,6 +2,7 @@
 #define __RATIONNEL_HPP__
 
 #include <iostream>
+#include "Entier.hpp"
 
 using namespace std;
 
@@ -10,20 +11,20 @@ class Rationnel
 public :
     // Constructeur
     Rationnel();
-    Rationnel(int n, int d);
+    Rationnel(Entier n, Entier d);
     Rationnel(const Rationnel & R);
 
 
     //Accesseur
-    int get_numerateur() const;
-    int get_denominateur() const;
+    Entier get_numerateur() const;
+    Entier get_denominateur() const;
 
 
     // Affiche le rationnel sous forme numerateur / denominateur
     void afficher() const;
 
     // Renvoie l’approximation flottante
-    double valeur_approx() const;
+    string valeur_approx() const;
 
     //simplifie la fraction
     void simplifie();
@@ -79,8 +80,8 @@ public :
 
 private :
     //atribut d'un rationnel
-    int  numerateur;
-    int denominateur;
+    Entier  numerateur;
+    Entier denominateur;
 
 };
 
