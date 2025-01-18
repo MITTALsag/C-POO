@@ -1,15 +1,15 @@
 CXX = g++
 CXXFLAGS= -std=c++17 -Wall -Wextra -Werror
 
-SRC = $(wildcard *.cpp)
-OBJ = $(SRC:.cpp=.o)
+SRC = Rationnel.cpp Entier.cpp
+OBJ = Rationnel.o Entier.o
+
+EXEC = Livrable1 Livrable2 Livrable3
+all : $(EXEC)
 
 
-all : Livrable1 Livrable2 Livrable3
 
-
-
-Livrable% : $(OBJ)
+Livrable% : $(OBJ) Livrable%.o test_Livrable%.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 
@@ -17,8 +17,8 @@ Livrable% : $(OBJ)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 
-clean :
-	rm -f test_Rationnel
+clean:
+	rm -f $(EXEC)
 
 fclean: clean
 	rm -f *.o
