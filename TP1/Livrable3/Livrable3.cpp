@@ -12,7 +12,8 @@ int main(int argc, char* argv[])
                   << "./Livrable3 runTests : lance le test \"runTests\".\n"
                   << "./Livrable3 factorial_Entier lance la test de la factoriel avec la classe Entier.\n"
                   << "./Livrable3 factorial_int lance la test de la factoriel avec les entier classique.\n"
-                  << "./Livrable3 Un lance la test de la Un.\n"
+                  << "./Livrable3 Un lance la test de la suite Un.\n"
+                  << "./Livrable3 Vn lance la test de la suite Vn.\n"
                   << std::endl;
         return 1;
     }
@@ -33,12 +34,26 @@ int main(int argc, char* argv[])
             std::cout << i << "! = " << factorial(i) << std::endl;
         }
         std::cout << "La fonction factorial pour les entier classique semble correct.\n"
-                  << "Mais si on fais : factorial(1234) on a : 1234! = " << factorial(1234) << "ce qui est impossible.\n"
+                  << "Mais si on fais : factorial(1234) on a : 1234! = " << factorial(1234) << " ce qui est impossible.\n"
                   << "Ce qui montre que pour des grand nombre les entier classique (même les uint64_t) ne sont pas adapté." << std::endl;
     }
     else if (std::string(argv[1]) == "Un")
     {
         Rationnel R = suite_Un_Rationnel(20, true);
+        std::cout << "La suite converge bien vers 2.\n"
+                  << "Mais c'est très lent, donc pas optimiser.\n"
+                  << "Pour la suite il faudrait optimiser les algos d'opération de la classe Entier.\n"
+                  << "On pourrai aussi modifier la classe Entier pour changer la base de stockage. Par exemple stocker en base 10^9.\n"
+                  << std::endl;
+    }
+    else if (std::string(argv[1]) == "Vn")
+    {
+        Rationnel R = suite_Vn_Rationnel(20, 2, true);
+        std::cout << "La suite converge bien vers 2.\n"
+            << "Mais c'est très lent, donc pas optimiser.\n"
+            << "Pour la suite il faudrait optimiser les algos d'opération de la classe Entier.\n"
+            << "On pourrai aussi modifier la classe Entier pour changer la base de stockage. Par exemple stocker en base 10^9.\n"
+            << std::endl;
     }
 
 }

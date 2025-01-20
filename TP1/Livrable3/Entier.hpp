@@ -13,13 +13,28 @@ private:
 
 
 public:
+
     Entier(); // Constructeur par défaut
     Entier(int64_t value); // Constructeur prenant un int64_t
-    bool isNeg() const; //retourne vrais si l'entier est négatif
-
+    
     // Méthode pour normaliser le vecteur de chiffres
     //enlève tous les 0 non utilisé
     void normalize(); 
+    bool isNeg() const; //retourne vrais si l'entier est négatif
+
+
+
+    bool operator==(const Entier& other) const;
+    bool operator==(const uint64_t n ) const;
+
+    bool operator!=(const Entier& other) const;
+    bool operator!=(const uint64_t n ) const;
+
+    bool operator<(const Entier& other) const;
+    bool operator>(const Entier& other) const;
+    
+    bool operator<=(const Entier& other) const;
+    bool operator>=(const Entier& other) const;
 
     Entier operator+(const Entier& other) const; // Opérateur d'addition
     Entier operator+(const uint64_t n) const; // Opérateur d'addition
@@ -31,8 +46,7 @@ public:
     Entier operator*(const Entier& other) const; // Opérateur de multiplication
     Entier operator*(const uint64_t n) const; // Opérateur de multiplication
 
-    bool operator<(const Entier& other) const;
-    bool operator>(const Entier& other) const;
+
 
     Entier operator/(const Entier& other) const;
     Entier operator/(const uint64_t n) const;
@@ -40,8 +54,7 @@ public:
     Entier operator%(const uint64_t n) const;
 
 
-    bool operator==(const Entier& other) const;
-    bool operator==(const uint64_t) const;
+
 
 
     std::string toString() const; // Méthode pour convertir l'entier en chaîne de caractères

@@ -8,9 +8,9 @@
 using namespace std;
 
 /*###############################################################*/
-/*****************/
-/* Constructeurs */
-/*****************/
+/*####################### CONSTRUCTEURS #########################*/
+/*###############################################################*/
+#pragma region CONSTRUCTEURS
 
 /*
 * Constructeur par défaut :
@@ -37,11 +37,13 @@ Entier::Entier(int64_t value) {
         value /= 10; // Supprime le dernier chiffre de la valeur
     } while (value > 0); // Continue jusqu'à ce que la valeur soit 0
 }
+#pragma endregion
+
 
 /*###############################################################*/
-/*************************/
-/* Méthodes utilitaires */
-/*************************/
+/*##################### MÉTHODES UTILITAIRES #####################*/
+/*###############################################################*/
+#pragma region MÉTHODES UTILITAIRES
 
 /*
 * Méthode pour normaliser le vecteur de chiffres
@@ -70,11 +72,56 @@ Entier Entier::abs() const {
     result.isNegative = false;
     return result;
 }
+#pragma endregion
+
 
 /*###############################################################*/
-/**********************/
-/* Opérations de base */
-/**********************/
+/*############### OPÉRATIONS DE COMPARAISON #####################*/
+/*###############################################################*/
+#pragma region OPÉRATIONS DE COMPARAISON
+
+/*
+* opération de inferieur ou égal entre deux Entier
+*/
+bool Entier::operator<=(const Entier& other) const {
+    // Si les signes sont différents
+    if (isNegative != other.isNegative) {
+        // Si this est négatif (isNegative = true) et other est positif, this est plus petit --> renvoie bien true
+        // Si this est positif (isNegative = false) et other est negatif, this est plus grand --> renvoie bien false
+        return isNegative; 
+    }
+
+    // Compare les tailles des vecteurs 'digits'
+    if (this->digits.size() != other.digits.size())
+        if (isNegative) //les deux sont negatif
+            return this->digits.size() > other.digits.size(); //retourne vrais si this est plus grand --> plus petit en prenant en compte les signe
+        else //les deux sont positif --> retourne vrais si this est plus petit que other
+            return this->digits.size() < other.digits.size(); // Si 'this' a moins de chiffres, il est plus petit
+     else {
+        // Si les tailles sont égales, compare les chiffres un par un de gauche à droite
+        for (size_t i = this->digits.size(); i > 0; --i) {
+            if (this->digits[i - 1] < other.digits[i - 1]) 
+                return true; // Si un chiffre de 'this' est plus petir, 'this' est plus petir
+
+            if (this->digits[i - 1] > other.digits[i - 1])
+                return false; // Si un chiffre de 'other' est plus petit, 'this' n'est pas plus petit
+
+        }
+        
+        return true; //si on sort de la boucle (dans le else) --> les deux Entier sont égaux
+
+    }
+    // Si on se retrouve ici, il y a un souci
+    throw std::logic_error("Vous ne devriez pas vous trouver ici.");
+
+}
+
+/*
+* opération de superieur strict entre deux Entier
+*/
+bool Entier::operator>(const Entier& other) const {
+    return !(*this <= other); //car non(>) = (<=)
+}
 
 /*
 * opération de inferieur strict entre deux Entier
@@ -103,43 +150,72 @@ bool Entier::operator<(const Entier& other) const {
                 return false; // Si un chiffre de 'other' est plus petit, 'this' n'est pas plus petit
 
         }
+        return false; //si on sort de la boucle (dans le else) --> les deux Entier sont égaux donc retourner false
+
     }
-    return false;
+    // Si on se retrouve ici, il y a un souci
+    throw std::logic_error("Vous ne devriez pas vous trouver ici.");
 
 
 }
 
 /*
-* opération de superieur strict entre deux Entier
+* opération de superieur ou égal entre deux Entier
 */
-bool Entier::operator>(const Entier& other) const {
-    // Si les signes sont différents
-    if (isNegative != other.isNegative) {
-        // Si this est négatif (isNegative = true) et other est positif, this est plus grand --> renvoie bien false
-        // Si this est positif (isNegative = false) et other est negatif, this est plus grand --> renvoie bien true
-        return !isNegative; 
-    }
-
-    // Compare les tailles des vecteurs 'digits'
-    if (this->digits.size() != other.digits.size())
-        if (isNegative) //les deux sont negatif
-            return this->digits.size() < other.digits.size(); //retourne vrais si this est plus petit --> plus grand en prenant en compte les signe
-        else //les deux sont positif --> retourne vrais si this est plus grand que other
-            return this->digits.size() > other.digits.size(); // Si 'this' a moins de chiffres, il est plus petit
-     else {
-        // Si les tailles sont égales, compare les chiffres un par un de gauche à droite
-        for (size_t i = this->digits.size(); i > 0; --i) {
-            if (this->digits[i - 1] > other.digits[i - 1]) 
-                return true; // Si un chiffre de 'this' est plus petir, 'this' est plus petir
-
-            if (this->digits[i - 1] < other.digits[i - 1])
-                return false; // Si un chiffre de 'other' est plus petit, 'this' n'est pas plus petit
-
-        }
-    }
-    
-    return false;
+bool Entier::operator>=(const Entier& other) const {
+    return !(*this < other); //car non(>=) = (<)
 }
+
+/*
+* Operateur d'egalité
+*/
+bool Entier::operator==(const Entier& other) const {
+    // Si les signes sont différents ou la taille des tableau ne sont pas égal
+    if ((isNegative != other.isNegative) || (this->digits.size() != other.digits.size())) {
+        return false; 
+    }
+
+    for (size_t i = 0;  i < this->digits.size(); i++) {
+            if (this->digits[i] != other.digits[i]) 
+                return false; // Si un chiffre de 'this' != de un chiffre de other
+        }
+        
+    return true; //si tout les chiffre sont égaux
+}
+
+
+/*
+* Operateur d'egalité
+*/
+bool Entier::operator==(const uint64_t n) const {
+    Entier other = n;
+    return *this == other;
+}
+
+/*
+* Operateur de non egalité
+*/
+bool Entier::operator!=(const Entier& other) const {
+    return !(*this == other);
+}
+
+
+/*
+* Operateur de non egalité
+*/
+bool Entier::operator!=(const uint64_t n) const {
+        return !(*this == n);
+
+}
+
+#pragma endregion
+
+
+
+/*###############################################################*/
+/*###################### OPÉRATIONS DE BASE #####################*/
+/*###############################################################*/
+#pragma region OPÉRATIONS DE BASE
 
 /*
 * Opérateur d'addition pour deux entiers
@@ -319,7 +395,7 @@ Entier Entier::operator/(const Entier& other) const {
     quotient.isNegative = false;
 
     // Boucle de division
-    while (dividend > divisor || dividend == divisor) { //pour faire dividend >= divisor
+    while (dividend >= divisor) {
         dividend = dividend - divisor; // Soustrait le diviseur du dividende
         quotient = quotient + 1; // Incrémente le quotient
     }
@@ -398,7 +474,7 @@ Entier Entier::gcd_Entier(const Entier& other) const {
     Entier a = *this;
     Entier b = other;
 
-    while (!(b == Entier(0))) {
+    while (b != Entier(0)) {
         Entier temp = b;
         b = a % b;
         a = temp;
@@ -407,32 +483,13 @@ Entier Entier::gcd_Entier(const Entier& other) const {
     return a.abs();
 }
 
-/*
-* Operateur d'egalité
-*/
-bool Entier::operator==(const Entier& other) const {
-    if (isNegative != other.isNegative || digits != other.digits) {
-        return false;
-    }
-    return true;
-}
-
-
-
-/*
-* Operateur d'egalité
-*/
-bool Entier::operator==(const uint64_t n) const {
-    Entier other(n);
-    return *this == other;
-}
-
+#pragma endregion
 
 
 /*###############################################################*/
-/************************/
-/* Méthodes d'affichage */
-/************************/
+/*#################### MÉTHODES D'AFFICHAGE #####################*/
+/*###############################################################*/
+#pragma region MÉTHODES AFFICHAGE
 
 /*
 * Méthode pour convertir l'entier en chaîne de caractères
@@ -455,3 +512,5 @@ ostream& operator<<(ostream& os, const Entier& entier) {
     os << entier.toString(); // Utilise la méthode toString pour convertir l'entier en chaîne de caractères
     return os; // Retourne le flux de sortie
 }
+
+#pragma endregion
