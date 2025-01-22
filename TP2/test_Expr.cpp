@@ -17,5 +17,13 @@ int main(void)
     a.affiche() ;
     cout << endl ;
 
+    a = Expr(2);              // 2
+    Expr b(3);              // 3
+    Expr c(Div, a, b);      // 2 / 3
+    Expr d(Mul, c, b);      // (2 / 3) * 3
+
+    d.simplifie();          // Résultat attendu : 2
+    d.affiche();            // Doit afficher 2
+
     return 0;
 }

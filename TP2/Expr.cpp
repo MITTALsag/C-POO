@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cassert>
+#include <numeric>
 #include "Expr.hpp"
 
 /*================================================================================================================#*/
@@ -27,14 +28,14 @@ Expr::Expr(const string symb) : nature(CstSymb), nb_fils(0), gauche(nullptr), dr
 {
     // On affecte la valeur de la constante symbolique à la valeur de l'expression
     if (symb == "pi" || symb == "PI" || symb == "Pi")
-        value.cstValue = Pi;
+        value.cstValue = pi;
     else if (symb == "e" || symb == "E")
-        value.cstValue = E;
+        value.cstValue = e;
     else if (symb == "i" || symb == "I")
-        value.cstValue = I;
+        value.cstValue = i;
     else
     {
-        throw invalid_argument("La constante symbolique n'est pas reconnue");
+        throw invalid_argument("Erreur (Expr(const string) : La constante symbolique n'est pas reconnue");
     }
 }
 
@@ -102,7 +103,11 @@ Expr& Expr::operator=(const Expr& other) {
             case Binary_op:
                 value.binaryOpValue = other.value.binaryOpValue;
                 break;
+            case Null:
+                value.nullValue = other.value.nullValue;
+                break;
             default:
+                throw invalid_argument("Erreur (operator=) : L'expression n'est pas reconnue");
                 break;
         }
     }
@@ -164,6 +169,7 @@ void Expr::affiche() const
             break;
         }
     default:
+        throw invalid_argument("Erreur (affiche) : L'expression n'est pas reconnue");
         break;
     }
 }
@@ -182,13 +188,17 @@ void Expr::simplifie()
         simplifie_unary();
         break;
     case Binary_op:
-        //simplifie_binary();
+        simplifie_binary();
+        break;
+    case CstInt:
+    case CstSymb:
+    case Var:
         break;
     default:
+        throw invalid_argument("Erreur (simplifie) : L'expression n'est pas reconnue");
         break;
     }
 }
-
 
 /*================================================================================================================#*/
 /**************************************/
@@ -211,16 +221,17 @@ string Expr::get_cst_symb_str() const
     CstSymb_t cst = value.cstValue;
     switch (cst)
     {
-    case Pi:
+    case pi:
         return "pi";
         break;
-    case E:
+    case e:
         return "e";
         break;
-    case I:
+    case i:
         return "i";
         break;
     default:
+        throw invalid_argument("Erreur (get_cst_symb_str) : La constante symbolique n'est pas reconnue");
         break;
     }
 }
@@ -242,6 +253,7 @@ string Expr::get_unary_op_str() const
         return "ln";
         break;
     default:
+        throw invalid_argument("Erreur (get_unary_op_str) : L'opérateur unaire n'est pas reconnu");
         break;
     }
 }
@@ -265,6 +277,7 @@ string Expr::get_binary_op_str() const
         return "/";
         break;
     default:
+        throw invalid_argument("Erreur (get_binary_op_str) : L'opérateur binaire n'est pas reconnu");
         break;
     }
 }
@@ -304,7 +317,7 @@ void Expr::simplifie_unary()
             if (gauche->value.intValue < 0)
             {
                     //Erreur : la racine carrée d'un nombre négatif n'est pas définie
-                    throw invalid_argument("La racine carrée d'un nombre négatif n'est pas définie");
+                    throw invalid_argument("Erreur (simplifie_unary) : La racine carrée d'un nombre négatif n'est pas définie");
             }
             //si l'expression gauche est une constante entière nulle
             else if (gauche->value.intValue == 0)
@@ -326,24 +339,25 @@ void Expr::simplifie_unary()
         //si l'expression gauche est une constante entière
         if (gauche->nature == CstInt)
         {
+            //si l'expression gauche est une constante entière nulle
+            if (gauche->value.intValue <= 0)
+            {
+                    //Erreur : la racine carrée d'un nombre négatif n'est pas définie
+                    throw invalid_argument("Erreur (simplifie_unary) : Le logarithme d'un nombre négatif n'est pas définie");
+            }
             //si l'expression gauche est un égal à 1
-            if (gauche->value.intValue == 1)
+            else if (gauche->value.intValue == 1)
             {
                 //on remplace l'expression par 0
                 *this = Expr(0);
             }
-            //si l'expression gauche est une constante entière nulle
-            else if (gauche->value.intValue <= 0)
-            {
-                    //Erreur : la racine carrée d'un nombre négatif n'est pas définie
-                    throw invalid_argument("Le logarithme d'un nombre négatif n'est pas définie");
-            }
+
         }
         //si l'expression gauche est une constante symbolique
         else if (gauche->nature == CstSymb)
         {
             //si l'expression gauche est un égal à e
-            if (gauche->value.cstValue == E)
+            if (gauche->value.cstValue == e)
             {
                 //on remplace l'expression par 1
                 *this = Expr(1);
@@ -351,24 +365,125 @@ void Expr::simplifie_unary()
         }
         break;
 
+    default:
+        throw invalid_argument("Erreur (simplifie_unary) : L'opérateur unaire n'est pas reconnu");
+        break;
+
     }
 }
-/*
+
+// Méthode qui simplifie un expression binaire
 void Expr::simplifie_binary()
 {
-    Binary_op_t op = std::get<Binary_op_t>(value);
+    Binary_op_t op = value.binaryOpValue;
     switch (op)
     {
-        case Add:
-            if (gauche->nature == CstInt && std::get<int>(gauche->value) == 0)
-            {
-                *this = *droite;
-            }
-            else if (droite->nature == CstInt && std::get<int>(droite->value) == 0)
-            {
-                *this = *gauche;
-            }
-            break;
+    // Simplification de l'opération Add (addition)
+    case Add:
+        //si l'expression gauche est une constante entière nulle
+        if (gauche->nature == CstInt && gauche->value.intValue == 0)
+        {
+            //on remplace l'expression par l'expression droite
+            *this = *droite;
+        }
+        //si l'expression droite est une constante entière nulle
+        else if (droite->nature == CstInt && droite->value.intValue == 0)
+        {
+            //on remplace l'expression par l'expression gauche
+            *this = *gauche;
+        }
+        //si l'expression gauche et droite sont des constantes entières non nulle
+        else if (gauche->nature == CstInt && droite->nature == CstInt)
+        {
+            //on les additionne
+            *this = Expr(gauche->value.intValue + droite->value.intValue);
+        }
+        break;
+    
+    // Simplification de l'opération Sub (soustraction)
+    case Sub:
+        //si l'expression gauche est une constante entière nulle
+        if (gauche->nature == CstInt && gauche->value.intValue == 0)
+        {
+            //on remplace l'expression par l'opposé de l'expression droite
+            *this = Expr(Neg, *droite);
+        }
+        //si l'expression droite est une constante entière nulle
+        else if (droite->nature == CstInt && droite->value.intValue == 0)
+        {
+            //on remplace l'expression par l'expression gauche
+            *this = *gauche;
+        }
+        //si l'expression gauche et droite sont des constantes entières non nulle
+        else if (gauche->nature == CstInt && droite->nature == CstInt)
+        {
+            //on les soustrait
+            *this = Expr(gauche->value.intValue - droite->value.intValue);
+        }
+
+        break;
+
+        // Simplification de l'opération Mul (multiplication)
+    case Mul:
+        //si l'expression gauche ou droite est une constante entière nulle
+        if ((gauche->nature == CstInt && gauche->value.intValue == 0) || (droite->nature == CstInt && droite->value.intValue == 0))
+        {
+            //on remplace l'expression par 0
+            *this = Expr(0);
+        }
+        //si l'expression gauche est une constante entière égale à 1
+        else if (gauche->nature == CstInt && gauche->value.intValue == 1)
+        {
+            //on remplace l'expression par l'expression droite
+            *this = *droite;
+        }
+        //si l'expression droite est une constante entière égale à 1
+        else if (droite->nature == CstInt && droite->value.intValue == 1)
+        {
+            //on remplace l'expression par l'expression gauche
+            *this = *gauche;
+        }
+        //si l'expression gauche et droite sont des constantes entières non nulle et non égale à 1
+        else if (gauche->nature == CstInt && droite->nature == CstInt)
+        {
+            //on les multiplie
+            *this = Expr(gauche->value.intValue * droite->value.intValue);
+        }
+        break;
+
+        // Simplification de l'opération Div (division)
+    case Div:
+        //si l'expression de droite est nulle on renvoie une erreur
+        if (droite->nature == CstInt && droite->value.intValue == 0)
+        {
+            throw invalid_argument("Erreur (simplifie_binary) : Division par zéro");
+        }
+        //si l'expression gauche est une constante entière nulle
+        else if (gauche->nature == CstInt && gauche->value.intValue == 0)
+        {
+            //on remplace l'expression par 0
+            *this = Expr(0);
+        }
+        //si l'expression droite est une constante entière égale à 1
+        else if (droite->nature == CstInt && droite->value.intValue == 1)
+        {
+            //on remplace l'expression par l'expression gauche
+            *this = *gauche;
+        }
+        //si l'expression gauche et droite sont des constantes entières
+        else if (gauche->nature == CstInt && droite->nature == CstInt)
+        {
+            //on clacul le pgcd de l'expression gauche et droite pour simplifier l'expression si c'est possible
+            int pgcd = gcd(gauche->value.intValue, droite->value.intValue);
+            //on divise l'expression gauche et droite par le pgcd
+            gauche->value.intValue /= pgcd;
+            droite->value.intValue /= pgcd;
+        }
+        break;
+    
+    default:
+        throw invalid_argument("Erreur (simplifie_binary) : L'opérateur binaire n'est pas reconnu");
+        break;
+
     }
 }
-*/

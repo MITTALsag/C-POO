@@ -32,7 +32,7 @@ typedef enum Binary_op_t { Add , Sub , Mul , Div }Binary_op_t;
     - E  : nombre e
     - I  : nombre i
 */
-typedef enum CstSymb_t { Pi , E , I }CstSymb_t;
+typedef enum CstSymb_t { pi , e , i }CstSymb_t;
 
 
 /*
