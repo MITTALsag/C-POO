@@ -2,7 +2,6 @@
 #define __EXPR_HPP__
 
 #include <string>
-#include <variant>
 using namespace std;
 
 
@@ -13,7 +12,7 @@ using namespace std;
     - Sqrt : racine carrée
     - Ln   : logarithme népérien
 */
-typedef enum Unary_op_t { Neg , Sqrt , Ln, Sin, Cos, Tan, Log, Exp }Unary_op_t;
+typedef enum Unary_op_t { Neg , Sqrt , Ln }Unary_op_t;
 
 /*
 * C'est une classe qui représente les opérations mathématiques binaires.
@@ -23,7 +22,17 @@ typedef enum Unary_op_t { Neg , Sqrt , Ln, Sin, Cos, Tan, Log, Exp }Unary_op_t;
     - Mul : multiplication
     - Div : division
 */
-typedef enum Binary_op_t { Add , Sub , Mul , Div, Pow }Binary_op_t;
+typedef enum Binary_op_t { Add , Sub , Mul , Div }Binary_op_t;
+
+
+/*
+* C'est une classe qui représente les constantes symboliques.
+* Ici, on a 3 types de constantes symboliques :
+    - Pi : nombre pi
+    - E  : nombre e
+    - I  : nombre i
+*/
+typedef enum CstSymb_t { Pi , E , I }CstSymb_t;
 
 
 /*
@@ -60,7 +69,7 @@ typedef enum Nature_t { CstInt , CstSymb , Var , Unary_op, Binary_op, Null }Natu
     - nb_fils : le nombre de fils de l'expression
     - gauche : pointeur vers le fils gauche de l'expression
     - droite : pointeur vers le fils droit de l'expression
-    - value : une union qui contient la valeur de soit un int, un char, un string*, un Unary_op_t*, un Binary_op_t* ou le pointeur null
+    - value : un union de soit un int, un char, un string, un Unary_op_t, un Binary_op_t ou le pointeur null
 */
 class Expr {
 public:
@@ -88,6 +97,13 @@ public:
     Expr(Binary_op_t op, Expr& gauche, Expr& droit);
 
 
+/************************/
+/****** Opérateurs ******/
+/************************/
+
+    // Opérateur d'affectation
+    Expr& operator=(const Expr& other);
+
 
 /********************************/
 /****** Méthodes publiques ******/
@@ -96,20 +112,27 @@ public:
     //méthode qui affiche l'expression
     void affiche() const;
 
-
+    //méthode qui simplifie l'expression
+    void simplifie();
 
 private:
 /***************************/
 /******** Attributs ********/
 /***************************/
         Nature_t nature;
-        const int nb_fils;
+        int nb_fils;
         Expr* gauche;
         Expr* droite;
         
         //soit un int, un char, un string, un Unary_op_t, un Binary_op_t le pointeur null
-        variant<int, char, std::string, Unary_op_t, Binary_op_t, void*> value;
-
+        union Value {
+        int intValue;
+        char charValue;
+        CstSymb_t cstValue;
+        Unary_op_t unaryOpValue;
+        Binary_op_t binaryOpValue;
+        bool nullValue;
+    } value;
     
 /**************************************/
 /* Méthodes privées de la classe Expr */
@@ -121,15 +144,20 @@ private:
     // Méthode qui retourne le nombre de fils de l'expression
     int get_nb_fils() const;
 
-    // Fonction qui affiche les opérateurs unaires et binaires
-    void affiche_unary_op(Unary_op_t op) const;
+    // Méthode qui retourne la constante symbolique en string
+    string get_cst_symb_str() const;
 
-    // Fonction qui affiche les opérateurs binaires
-    void affiche_binary_op(Binary_op_t op) const;
+    // Méthode qui retourne l'opérateur unaire en string
+    string get_unary_op_str() const;
 
-    //méthode qui affiche l'expression (corps de la méthode récursive)
-    void affiche_rec() const;
+    // Méthode qui retourne l'opérateur binaire en string
+    string get_binary_op_str() const;
 
+    // Méthode qui simplifie un expression unaire
+    void simplifie_unary();
+
+    // Méthode qui simplifie un expression binaire
+    void simplifie_binary();
 };
 
 #endif

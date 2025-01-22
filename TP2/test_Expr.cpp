@@ -13,7 +13,7 @@ int main(void)
     Expr a (Add , x, m) ;
     a.affiche() ;
     cout << " = ";
-    //a. simplifie () ;
+    a.simplifie () ;
     a.affiche() ;
     cout << endl ;
 
