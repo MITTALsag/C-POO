@@ -20,9 +20,10 @@ typedef enum Unary_op_t { Neg , Sqrt , Ln }Unary_op_t;
     - Add : addition
     - Sub : soustraction
     - Mul : multiplication
-    - Div : division
+    - Div : division (l'argument de gauche est le numérateur et l'argument de droite est le dénominateur)
+    - Pow : puissance (l'argument de gauche est la base et l'argument de droite est l'exposant)
 */
-typedef enum Binary_op_t { Add , Sub , Mul , Div }Binary_op_t;
+typedef enum Binary_op_t { Add , Sub , Mul , Div , Pow}Binary_op_t;
 
 
 /*
@@ -39,7 +40,7 @@ typedef enum CstSymb_t { pi , e , i }CstSymb_t;
 * C'est une classe qui représente la nature d'une partie d'expression mathématique.
 * Ici, on a 6 types de nature :
     - CstInt      : représentant tout nombre rationnel (sera représenter par un int)
-    - CstSymb     : représentant tout nombre symbolique comme pi, e, i... (sera représenter par un string)
+    - CstSymb     : représentant tout nombre symbolique comme pi, e, i... (sera représenter par un CstSymb_t)
     - Var         : représentant une variable (sera représenter par un char)
     - Unary_op_t  : représentant une opération unaire (sera représenter par un Unary_op_t)
     - Binary_op_t : représentant une opération binaire (sera représenter par un Binary_op_t)
@@ -58,7 +59,6 @@ typedef enum Nature_t { CstInt , CstSymb , Var , Unary_op, Binary_op, Null }Natu
 /*
 * C'est une classe qui représente une expression mathématique.
 * Une expression sera représentaer par un arbre, où chaque noeud est une expression qui pourra avoir 0, 1 ou 2 fils.
-* Une expression sera construite dans le tas via des new et des delete. 
 * Il y a 3 types d'expressions mathématiques :
     - Constante : une constante entière ou symbolique
     - Variable  : une variable
@@ -69,7 +69,7 @@ typedef enum Nature_t { CstInt , CstSymb , Var , Unary_op, Binary_op, Null }Natu
     - nb_fils : le nombre de fils de l'expression
     - gauche : pointeur vers le fils gauche de l'expression
     - droite : pointeur vers le fils droit de l'expression
-    - value : un union de soit un int, un char, un string, un Unary_op_t, un Binary_op_t ou le pointeur null
+    - value : un union de soit un int (pour CstInt), un char pour(Var), un CstSymb , un Unary_op_t, un Binary_op_t ou le booléen qui est vrais si pas de valeur
 */
 class Expr {
 public:
@@ -104,6 +104,8 @@ public:
     // Opérateur d'affectation
     Expr& operator=(const Expr& other);
 
+    //opérateur de comparaison d'égalité
+    bool operator==(Expr& droite) const;
 
 /********************************/
 /****** Méthodes publiques ******/
@@ -115,6 +117,28 @@ public:
     //méthode qui simplifie l'expression
     void simplifie();
 
+/**********************************/
+/*********** Accesseurs ***********/
+/**********************************/
+
+    //Méthode qui retourne la nature de l'expression
+    Nature_t get_nature() const { return nature; }
+
+    // Méthode qui retourne la valeur entière de l'expression
+    int get_int_value() const { return value.intValue; }
+
+    // Méthode qui retourne la valeur de la variable
+    char get_char_value() const { return value.charValue; }
+
+    // Méthode qui retourne la valeur de la constante symbolique
+    CstSymb_t get_cst_value() const { return value.cstValue; }
+
+    // Méthode qui retourne l'opérateur unaire
+    Unary_op_t get_unary_op_value() const { return value.unaryOpValue; }
+
+    // Méthode qui retourne l'opérateur binaire
+    Binary_op_t get_binary_op_value() const { return value.binaryOpValue; }
+
 private:
 /***************************/
 /******** Attributs ********/
@@ -124,7 +148,7 @@ private:
         Expr* gauche;
         Expr* droite;
         
-        //soit un int, un char, un string, un Unary_op_t, un Binary_op_t le pointeur null
+        //soit un int, un char, un CstSymb, un Unary_op_t, un Binary_op_t ou un bool null
         union Value {
         int intValue;
         char charValue;
@@ -137,13 +161,9 @@ private:
 /**************************************/
 /* Méthodes privées de la classe Expr */
 /**************************************/
+
+
     
-    // Méthode qui retourne la nature de l'expression
-    Nature_t get_Nature() const;
-
-    // Méthode qui retourne le nombre de fils de l'expression
-    int get_nb_fils() const;
-
     // Méthode qui retourne la constante symbolique en string
     string get_cst_symb_str() const;
 
@@ -152,6 +172,9 @@ private:
 
     // Méthode qui retourne l'opérateur binaire en string
     string get_binary_op_str() const;
+
+    // Méthode qui vérifie l'égalité entre deux noeud de l'arbre
+    bool verif_egalite(const Expr* e1, const Expr* e2) const;
 
     // Méthode qui simplifie un expression unaire
     void simplifie_unary();

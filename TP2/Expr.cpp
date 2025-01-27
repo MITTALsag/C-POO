@@ -71,7 +71,7 @@ Expr::Expr(Binary_op_t op, Expr& fils_gauche, Expr& fils_droit) : nature(Binary_
 /****** Opérateurs ******/
 /************************/
 
-
+//Opérateur d'affectation
 Expr& Expr::operator=(const Expr& other) {
     if (this != &other) { // Eviter l'auto-assignation
 
@@ -114,6 +114,26 @@ Expr& Expr::operator=(const Expr& other) {
     return *this; // Retourne l'objet courant pour permettre les chaines d'affectation
 }
 
+/*
+* opérateur de comparaison d'égalité
+* test si deux expressions sont égales
+*  Elles sont égale si l'arbre dont this qui est la racine de l'expression gauche et other qui est la racine de l'expression droite sont égaux
+* C'est une fonction récursive qui tests l'égalité des deux arbre gauche et droite
+*/
+bool Expr::operator==(Expr& other) const
+{
+    if (nature != droite->nature || nb_fils != droite->nb_fils || !verif_egalite(this, droite))
+        return false;
+
+    bool res1 = this->gauche == other.gauche;
+    bool res2 = this->droite == other.droite;
+
+    if (!res1 || !res2)
+        return false;
+    return true;
+
+
+}
 
 /*================================================================================================================#*/
 /********************************/
@@ -128,13 +148,13 @@ void Expr::affiche() const
     switch (nature)
     {
     case CstInt:
-        cout << value.intValue;  // Récupère la valeur entière
-        break;
-    case CstSymb:
-        cout << get_cst_symb_str();  // Récupère la valeur de la constante symbolique
+        cout << value.intValue;  // Affiche la valeur entière
         break;
     case Var:
-        cout << value.charValue;  // Récupère la valeur de la variable
+        cout << value.charValue;  // Affiche la valeur de la variable
+        break;
+    case CstSymb:
+        cout << get_cst_symb_str();  // Affiche la valeur de la constante symbolique
         break;
     case Unary_op:
         {
@@ -205,17 +225,8 @@ void Expr::simplifie()
 /* Méthodes privées de la classe Expr */
 /**************************************/
 
-Nature_t Expr::get_Nature() const
-{
-    return nature;
-}
 
-int Expr::get_nb_fils() const
-{
-    return nb_fils;
-}
-
-// Fonction qui affiche les opérateurs unaires et binaires
+// Fonction qui affiche les constantes symboliques
 string Expr::get_cst_symb_str() const
 {
     CstSymb_t cst = value.cstValue;
@@ -237,7 +248,7 @@ string Expr::get_cst_symb_str() const
 }
 
 
-
+// Fonction qui affiche les opérateurs unaires
 string Expr::get_unary_op_str() const 
 {
     Unary_op_t op = value.unaryOpValue;
@@ -276,10 +287,44 @@ string Expr::get_binary_op_str() const
     case Div:
         return "/";
         break;
+    case Pow:
+        return "^";
+        break;
     default:
         throw invalid_argument("Erreur (get_binary_op_str) : L'opérateur binaire n'est pas reconnu");
         break;
     }
+}
+
+// Méthode qui vérifie l'égalité entre deux noeud de l'arbre
+bool Expr::verif_egalite(const Expr* e1, const Expr* e2) const
+{
+    if (e1->nature != e2->nature || e1->nb_fils != e2->nb_fils)
+        return false;
+
+    Nature_t op = e1->nature;
+    switch (op)
+    {
+    case CstInt:
+        return e1->value.intValue == e2->value.intValue;
+        break;
+    case CstSymb:
+        return e1->value.cstValue == e2->value.cstValue;
+        break;
+    case Var:
+        return e1->value.charValue == e2->value.charValue;
+        break;
+    case Unary_op:
+        return e1->value.unaryOpValue == e2->value.unaryOpValue;
+        break;
+    case Binary_op:
+        return e1->value.binaryOpValue == e2->value.binaryOpValue;
+        break;
+    default:
+        throw invalid_argument("Erreur (verif_egalite) : L'expression n'est pas reconnue");
+        break;
+    }
+    return false;
 }
 
 // Méthode qui simplifie un expression unaire
@@ -290,7 +335,7 @@ void Expr::simplifie_unary()
     {
     // Simplification de l'opération Neg (négatif)
     case Neg:
-        //si l'expression gauche est une constante symbolique
+        //si l'expression gauche est une constante entiere
         if (gauche->nature == CstInt )
         {
             //si l'expression gauche est une constante entière non nulle
@@ -304,6 +349,16 @@ void Expr::simplifie_unary()
             {
                 //on remplace l'expression par 0
                 *this = Expr(0);
+            }
+        }
+        //si l'expression de gauche est une opertion unaire
+        else if (gauche->nature == Unary_op)
+        {
+            //si l'expression de gauche est une opération Neg
+            if (gauche->value.unaryOpValue == Neg)
+            {
+                //on remplace l'expression par l'expression de gauche
+                *this = *(gauche->gauche);
             }
         }
         break;
@@ -380,78 +435,33 @@ void Expr::simplifie_binary()
     {
     // Simplification de l'opération Add (addition)
     case Add:
-        //si l'expression gauche est une constante entière nulle
-        if (gauche->nature == CstInt && gauche->value.intValue == 0)
-        {
-            //on remplace l'expression par l'expression droite
-            *this = *droite;
-        }
-        //si l'expression droite est une constante entière nulle
-        else if (droite->nature == CstInt && droite->value.intValue == 0)
-        {
-            //on remplace l'expression par l'expression gauche
-            *this = *gauche;
-        }
-        //si l'expression gauche et droite sont des constantes entières non nulle
-        else if (gauche->nature == CstInt && droite->nature == CstInt)
+        //si l'expression gauche et droite sont des constantes entières
+        if (gauche->nature == CstInt && droite->nature == CstInt)
         {
             //on les additionne
             *this = Expr(gauche->value.intValue + droite->value.intValue);
         }
         break;
-    
     // Simplification de l'opération Sub (soustraction)
     case Sub:
-        //si l'expression gauche est une constante entière nulle
-        if (gauche->nature == CstInt && gauche->value.intValue == 0)
-        {
-            //on remplace l'expression par l'opposé de l'expression droite
-            *this = Expr(Neg, *droite);
-        }
-        //si l'expression droite est une constante entière nulle
-        else if (droite->nature == CstInt && droite->value.intValue == 0)
-        {
-            //on remplace l'expression par l'expression gauche
-            *this = *gauche;
-        }
-        //si l'expression gauche et droite sont des constantes entières non nulle
-        else if (gauche->nature == CstInt && droite->nature == CstInt)
+        //si l'expression gauche et droite sont des constantes entières
+        if (gauche->nature == CstInt && droite->nature == CstInt)
         {
             //on les soustrait
             *this = Expr(gauche->value.intValue - droite->value.intValue);
         }
-
         break;
-
-        // Simplification de l'opération Mul (multiplication)
+    // Simplification de l'opération Mul (multiplication)
     case Mul:
-        //si l'expression gauche ou droite est une constante entière nulle
-        if ((gauche->nature == CstInt && gauche->value.intValue == 0) || (droite->nature == CstInt && droite->value.intValue == 0))
-        {
-            //on remplace l'expression par 0
-            *this = Expr(0);
-        }
-        //si l'expression gauche est une constante entière égale à 1
-        else if (gauche->nature == CstInt && gauche->value.intValue == 1)
-        {
-            //on remplace l'expression par l'expression droite
-            *this = *droite;
-        }
-        //si l'expression droite est une constante entière égale à 1
-        else if (droite->nature == CstInt && droite->value.intValue == 1)
-        {
-            //on remplace l'expression par l'expression gauche
-            *this = *gauche;
-        }
-        //si l'expression gauche et droite sont des constantes entières non nulle et non égale à 1
-        else if (gauche->nature == CstInt && droite->nature == CstInt)
+        //si l'expression gauche et droite sont des constantes entières
+        if (gauche->nature == CstInt && droite->nature == CstInt)
         {
             //on les multiplie
             *this = Expr(gauche->value.intValue * droite->value.intValue);
         }
         break;
 
-        // Simplification de l'opération Div (division)
+    // Simplification de l'opération Div (division)
     case Div:
         //si l'expression de droite est nulle on renvoie une erreur
         if (droite->nature == CstInt && droite->value.intValue == 0)
@@ -464,23 +474,43 @@ void Expr::simplifie_binary()
             //on remplace l'expression par 0
             *this = Expr(0);
         }
-        //si l'expression droite est une constante entière égale à 1
-        else if (droite->nature == CstInt && droite->value.intValue == 1)
-        {
-            //on remplace l'expression par l'expression gauche
-            *this = *gauche;
-        }
         //si l'expression gauche et droite sont des constantes entières
         else if (gauche->nature == CstInt && droite->nature == CstInt)
-        {
+        {   
+            //si l'expression le denominateur est négatif on multiplie le numérateur et le dénominateur par -1
+            if (droite->value.intValue < 0)
+            {
+                gauche->value.intValue *= -1;
+                droite->value.intValue *= -1;
+            }
+
             //on clacul le pgcd de l'expression gauche et droite pour simplifier l'expression si c'est possible
             int pgcd = gcd(gauche->value.intValue, droite->value.intValue);
             //on divise l'expression gauche et droite par le pgcd
             gauche->value.intValue /= pgcd;
             droite->value.intValue /= pgcd;
+
+            //si l'expression au dénominateur est égale à 1
+            if (droite->value.intValue == 1)
+            {
+                *this = *gauche;
+            }
+        }
+        //si l'expression au numérateur est egale à l'expression au dénominateur
+        else if(gauche == droite)
+        {
+            //on remplace l'expression par 1
+            *this = Expr(1);
         }
         break;
-    
+    case Pow:
+        //si l'expression gauche et droite sont des constantes entières
+        if (gauche->nature == CstInt && droite->nature == CstInt)
+        {
+            //on calcule la puissance
+            *this = Expr(static_cast<int> (pow(gauche->value.intValue, droite->value.intValue)));
+        }
+        break;
     default:
         throw invalid_argument("Erreur (simplifie_binary) : L'opérateur binaire n'est pas reconnu");
         break;
