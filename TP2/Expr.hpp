@@ -55,6 +55,27 @@ typedef enum CstSymb_t { pi , e , i }CstSymb_t;
 typedef enum Nature_t { CstInt , CstSymb , Var , Unary_op, Binary_op, Null }Nature_t;
 
 
+/*
+* C'est une union qui représente la valeur d'une partie d'expression mathématique.
+* Elle est utilisée pour stocker la valeur d'une expression.
+* Ici, on a 6 types de valeurs :
+    - intValue    : valeur d'une constante entière
+    - charValue   : valeur d'une variable
+    - cstValue    : valeur d'une constante symbolique
+    - unaryOpValue: valeur d'une opération unaire
+    - binaryOpValue: valeur d'une opération binaire
+    - nullValue   : valeur null
+*/
+union Value {
+    int intValue;
+    char charValue;
+    CstSymb_t cstValue;
+    Unary_op_t unaryOpValue;
+    Binary_op_t binaryOpValue;
+    bool nullValue;
+    };
+
+
 
 /*
 * C'est une classe qui représente une expression mathématique.
@@ -69,7 +90,7 @@ typedef enum Nature_t { CstInt , CstSymb , Var , Unary_op, Binary_op, Null }Natu
     - nb_fils : le nombre de fils de l'expression
     - gauche : pointeur vers le fils gauche de l'expression
     - droite : pointeur vers le fils droit de l'expression
-    - value : un union de soit un int (pour CstInt), un char pour(Var), un CstSymb , un Unary_op_t, un Binary_op_t ou le booléen qui est vrais si pas de valeur
+    - value : Value de soit un int (pour CstInt), un char pour(Var), un CstSymb , un Unary_op_t, un Binary_op_t ou le booléen qui est vrais si pas de valeur
 */
 class Expr {
 public:
@@ -91,10 +112,13 @@ public:
     Expr(const char Var);
 
     // Constructeur pour les opérateur unaire
-    Expr(Unary_op_t op, Expr& gauche);
+    Expr(Unary_op_t op, const Expr& gauche);
 
     // Constructeur pour les opérateur binaire
-    Expr(Binary_op_t op, Expr& gauche, Expr& droit);
+    Expr(Binary_op_t op, const Expr& gauche, const Expr& droit);
+
+    // Constructeur par copie
+    Expr(const Expr& other);
 
 
 /************************/
@@ -105,7 +129,10 @@ public:
     Expr& operator=(const Expr& other);
 
     //opérateur de comparaison d'égalité
-    bool operator==(Expr& droite) const;
+    bool operator==(const Expr& droite) const;
+
+    //opérateur de comparaison d'égalité
+    bool operator!=(const Expr& droite) const { return !(*this == droite); }
 
 /********************************/
 /****** Méthodes publiques ******/
@@ -124,20 +151,14 @@ public:
     //Méthode qui retourne la nature de l'expression
     Nature_t get_nature() const { return nature; }
 
-    // Méthode qui retourne la valeur entière de l'expression
-    int get_int_value() const { return value.intValue; }
+    //Méthode qui retourne la valeur du noeud courant
+    Value get_value() const;
+    
+    //Méthode qui retourne la valeur de l'expression du noeud gauche
+    Value get_value_left_child() const;
 
-    // Méthode qui retourne la valeur de la variable
-    char get_char_value() const { return value.charValue; }
-
-    // Méthode qui retourne la valeur de la constante symbolique
-    CstSymb_t get_cst_value() const { return value.cstValue; }
-
-    // Méthode qui retourne l'opérateur unaire
-    Unary_op_t get_unary_op_value() const { return value.unaryOpValue; }
-
-    // Méthode qui retourne l'opérateur binaire
-    Binary_op_t get_binary_op_value() const { return value.binaryOpValue; }
+    //Méthode qui retourne la valeur de l'expression du noeud droit
+    Value get_value_right_child() const;
 
 private:
 /***************************/
@@ -149,14 +170,7 @@ private:
         Expr* droite;
         
         //soit un int, un char, un CstSymb, un Unary_op_t, un Binary_op_t ou un bool null
-        union Value {
-        int intValue;
-        char charValue;
-        CstSymb_t cstValue;
-        Unary_op_t unaryOpValue;
-        Binary_op_t binaryOpValue;
-        bool nullValue;
-    } value;
+        Value value;
     
 /**************************************/
 /* Méthodes privées de la classe Expr */

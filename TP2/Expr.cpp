@@ -47,23 +47,69 @@ Expr::Expr(const char c) : nature(Var), nb_fils(0), gauche(nullptr), droite(null
 }
 
 // Constructeur pour les opérateur unaire
-Expr::Expr(Unary_op_t op, Expr& fils_gauche) : nature(Unary_op), nb_fils(1), droite(nullptr)
+Expr::Expr(Unary_op_t op, const Expr& fils_gauche) : nature(Unary_op), nb_fils(1), droite(nullptr)
 {
     // On affecte l'opérateur unaire à la valeur de l'expression
     value.unaryOpValue = op;
-    // On affecte l'expression gauche à l'expression
-    gauche = &fils_gauche;
+    // On copie l'expression gauche à l'expression
+    gauche = new Expr(fils_gauche);
 }
 
 // Constructeur pour les opérateur binaire
-Expr::Expr(Binary_op_t op, Expr& fils_gauche, Expr& fils_droit) : nature(Binary_op), nb_fils(2)
+Expr::Expr(Binary_op_t op, const Expr& fils_gauche, const Expr& fils_droit) : nature(Binary_op), nb_fils(2)
 {
     // On affecte l'opérateur binaire à la valeur de l'expression
     value.binaryOpValue = op;
-    // On affecte l'expression gauche et droite à l'expression
-    gauche = &fils_gauche;
-    // On affecte l'expression droite à l'expression
-    droite = &fils_droit;
+    // On copie l'expression gauche à l'expression
+    gauche = new Expr(fils_gauche);
+    // On copie l'expression droite à l'expression
+    droite = new Expr(fils_droit);
+}
+
+// Constructeur par copie recursive
+Expr::Expr(const Expr& other)
+{
+    //Copie des attributs simples
+    nature = other.nature;
+    nb_fils = other.nb_fils;
+
+    //Copie de l'union
+    switch (nature)
+    {
+    case CstInt:
+        value.intValue = other.value.intValue;
+        break;
+    case CstSymb:
+        value.cstValue = other.value.cstValue;
+        break;
+    case Var:
+        value.charValue = other.value.charValue;
+        break;
+    case Unary_op:
+        value.unaryOpValue = other.value.unaryOpValue;
+        break;
+    case Binary_op:
+        value.binaryOpValue = other.value.binaryOpValue;
+        break;
+    case Null:
+        value.nullValue = other.value.nullValue;
+        break;
+    default:
+        throw invalid_argument("Erreur (constructeur par copie) : L'expression n'est pas reconnue");
+        break;
+    }
+
+    //Copie profonde des pointeurs 
+    if (other.gauche != nullptr)
+        gauche = new Expr(*(other.gauche));
+    else
+        gauche = nullptr;
+    
+    if (other.droite != nullptr)
+        droite = new Expr(*(other.droite));
+    else
+        droite = nullptr;
+
 }
 
 /*================================================================================================================#*/
@@ -71,20 +117,13 @@ Expr::Expr(Binary_op_t op, Expr& fils_gauche, Expr& fils_droit) : nature(Binary_
 /****** Opérateurs ******/
 /************************/
 
-//Opérateur d'affectation
+//Opérateur d'affectation recursive
 Expr& Expr::operator=(const Expr& other) {
     if (this != &other) { // Eviter l'auto-assignation
 
         // Copie des attributs simples
         nature = other.nature;
         nb_fils = other.nb_fils;
-        
-        // Copie des pointeurs
-
-        gauche = other.gauche; // Si l'expression `other` a un fils gauche, on le copie
-
-        
-        droite = other.droite; // Même logique pour droite
 
         // Copie du `union`
         switch (nature) {
@@ -110,7 +149,13 @@ Expr& Expr::operator=(const Expr& other) {
                 throw invalid_argument("Erreur (operator=) : L'expression n'est pas reconnue");
                 break;
         }
+
+
+        // Copie profonde des pointeurs
+        gauche = new Expr(*(other.gauche));
+        droite = new Expr(*(other.droite));
     }
+        
     return *this; // Retourne l'objet courant pour permettre les chaines d'affectation
 }
 
@@ -120,19 +165,65 @@ Expr& Expr::operator=(const Expr& other) {
 *  Elles sont égale si l'arbre dont this qui est la racine de l'expression gauche et other qui est la racine de l'expression droite sont égaux
 * C'est une fonction récursive qui tests l'égalité des deux arbre gauche et droite
 */
-bool Expr::operator==(Expr& other) const
+bool Expr::operator==(const Expr& droite) const
 {
-    if (nature != droite->nature || nb_fils != droite->nb_fils || !verif_egalite(this, droite))
+    // on verifie les attributs du neud courant et si ils sont différents alors les expressions sont différentes
+    if (!verif_egalite(this, &droite))
         return false;
 
-    bool res1 = this->gauche == other.gauche;
-    bool res2 = this->droite == other.droite;
+    // on verifie les fils gauche
+    bool res1 = false;
+    // si les deux fils gauche sont non nuls
+    if (this->gauche && droite.gauche) {
+        // on teste l'égalité des deux fils gauche avec un appel récursif
+        res1 = *(this->gauche) == *(droite.gauche);
+    } 
+    // si les deux fils gauche sont nuls alors ils sont égaux
+    else if (!this->gauche && !droite.gauche) {
+        // si les deux fils gauche sont nuls alors ils sont égaux
+        res1 = true;
+    }
 
-    if (!res1 || !res2)
-        return false;
-    return true;
+    // on verifie les fils droit
+    bool res2 = false;
+    // si les deux fils droit sont non nuls
+    if (this->droite && droite.droite) {
+        // on teste l'égalité des deux fils droit avec un appel récursif
+        res2 = *(this->droite) == *(droite.droite);
+    } 
+    // si les deux fils droit sont nuls alors ils sont égaux
+    else if (!this->droite && !droite.droite) {
+        res2 = true;
+    }
+
+    return res1 && res2;
+}
 
 
+/*================================================================================================================#*/
+/**********************************/
+/*********** Accesseurs ***********/
+/**********************************/
+
+//Méthode qui retourne la valeur du noeud courant
+Value Expr::get_value() const {
+    return value;
+}
+
+//Méthode qui retourne la valeur de l'expression du noeud gauche
+Value Expr::get_value_left_child() const {
+    if (gauche != nullptr)
+        return gauche->get_value();
+    else
+        throw invalid_argument("Erreur (get_value_left_child) : L'expression gauche est nulle");
+}
+
+//Méthode qui retourne la valeur de l'expression du noeud droit
+Value Expr::get_value_right_child() const {
+    if (droite != nullptr)
+        return droite->get_value();
+    else
+        throw invalid_argument("Erreur (get_value_right_child) : L'expression droite est nulle");
 }
 
 /*================================================================================================================#*/
@@ -297,35 +388,29 @@ string Expr::get_binary_op_str() const
 }
 
 // Méthode qui vérifie l'égalité entre deux noeud de l'arbre
-bool Expr::verif_egalite(const Expr* e1, const Expr* e2) const
-{
+bool Expr::verif_egalite(const Expr* e1, const Expr* e2) const {
+    if (!e1 && !e2) return true;  // Les deux pointeurs sont nuls
+    if (!e1 || !e2) return false; // Un seul pointeur est nul
+
     if (e1->nature != e2->nature || e1->nb_fils != e2->nb_fils)
         return false;
 
-    Nature_t op = e1->nature;
-    switch (op)
-    {
+    switch (e1->nature) {
     case CstInt:
         return e1->value.intValue == e2->value.intValue;
-        break;
     case CstSymb:
         return e1->value.cstValue == e2->value.cstValue;
-        break;
     case Var:
         return e1->value.charValue == e2->value.charValue;
-        break;
     case Unary_op:
         return e1->value.unaryOpValue == e2->value.unaryOpValue;
-        break;
     case Binary_op:
         return e1->value.binaryOpValue == e2->value.binaryOpValue;
-        break;
     default:
         throw invalid_argument("Erreur (verif_egalite) : L'expression n'est pas reconnue");
-        break;
     }
-    return false;
 }
+
 
 // Méthode qui simplifie un expression unaire
 void Expr::simplifie_unary()

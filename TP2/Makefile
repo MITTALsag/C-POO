@@ -4,7 +4,7 @@ CXXFLAGS= -std=c++17 -Wall -Wextra -Werror
 SRC = Expr.cpp
 OBJ = Expr.o
 
-EXEC = test_Expr unit_test
+EXEC =  unit_test
 all : $(EXEC)
 
 
