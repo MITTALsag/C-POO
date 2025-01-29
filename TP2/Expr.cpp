@@ -151,9 +151,21 @@ Expr& Expr::operator=(const Expr& other) {
         }
 
 
-        // Copie profonde des pointeurs
-        gauche = new Expr(*(other.gauche));
-        droite = new Expr(*(other.droite));
+        // Libération de la mémoire des pointeurs gauche et droite
+        //delete this->gauche;
+        //delete this->droite;
+
+        // IMPORTANT : Réinitialisation après delete pour éviter des accès invalides
+        gauche = nullptr;
+        droite = nullptr;
+
+        
+        // Copie profonde des pointeurs si ils ne sont pas nuls
+        if (other.gauche != nullptr)
+            gauche = new Expr(*(other.gauche));
+
+        if (other.droite != nullptr)
+            droite = new Expr(*(other.droite));
     }
         
     return *this; // Retourne l'objet courant pour permettre les chaines d'affectation

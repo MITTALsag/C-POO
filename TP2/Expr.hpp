@@ -120,6 +120,15 @@ public:
     // Constructeur par copie
     Expr(const Expr& other);
 
+/***************************/
+/******* Destructeur *******/
+/***************************/
+
+    /*
+    * Destructeur : libère la mémoire allouée pour les noeuds de l'arbre.
+    * Et libère la mémoire allouée pour les pointeurs gauche et droite.
+    */
+    ~Expr() { delete gauche; delete droite; }
 
 /************************/
 /****** Opérateurs ******/

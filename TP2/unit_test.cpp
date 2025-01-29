@@ -215,7 +215,60 @@ void test_constructeur_copie() {
     }
 }
 
+// Fonction de test pour l'affectation
+void test_affectation() {
 
+    // Définition des tests
+    Expr tests[] = {
+        {Expr(42)},  // Affectation simple d'un entier
+        {Expr(10)},  // Affectation d'un autre entier
+        {Expr("pi")},  // Affectation d'une constante symbolique
+        {Expr('x')},  // Affectation d'une variable
+        {Expr(Add, 2, 3)},  // Affectation d'une opération binaire
+        {Expr(Neg, 5)},  // Affectation d'une opération unaire
+        {Expr(Add, Expr(Add, 2, 3), 4)},  // Affectation d'une expression
+    };
+
+    bool all_passed = true;
+
+    // Exécution des tests
+    for (auto& test : tests) {
+        try {
+            Expr expr(0);  // Création d'une nouvelle expression (initialisée à 0)
+            expr = test;  // Test de l'affectation
+
+            // Vérification si la valeur après affectation est correcte
+            if (expr != test) {
+                cout << "Échec pour l'affectation, valeur attendue : "; test.affiche();
+                cout << " valeur obtenue : "; expr.affiche();
+                all_passed = false;
+            }
+        } catch (const exception& e) {
+            cout << "Exception pour l'affectation : " << e.what() << endl;
+            all_passed = false;
+        }
+    }
+
+    // Vérification de la copie profonde des fils lors de l'affectation
+    Expr gauche(2);
+    Expr droite(3);
+    Expr expr(Add, gauche, droite);
+
+    // Modification des enfants
+    gauche = Expr(4);
+    droite = Expr(5);
+
+    if (expr == Expr(Add, 4, 5)) {
+        cout << "Échec: test_affectation (copie profonde)"  << endl;
+        all_passed = false;
+    }
+
+    if (all_passed) {
+        cout << "Réussi: test_affectation" << endl;
+    } else {
+        cout << "Échec: test_affectation" << endl;
+    }
+}
 
 
 void test_operateur_unaire() {
@@ -413,6 +466,7 @@ int main() {
     test_constructeur_unaire();
     test_constructeur_binaire();
     test_constructeur_copie();
+    test_affectation();
     test_operateur_unaire();
     test_operateur_binaire();
     test_simplifie();

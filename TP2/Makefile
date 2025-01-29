@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS= -std=c++17 -Wall -Wextra -Werror
+CXXFLAGS= -g -std=c++17 -Wall -Wextra -Werror
 
 SRC = Expr.cpp
 OBJ = Expr.o
