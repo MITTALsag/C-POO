@@ -2,6 +2,7 @@
 #include <string>
 #include <cassert>
 #include <numeric>
+#include <math.h>
 #include "Expr.hpp"
 
 /*================================================================================================================#*/
@@ -10,10 +11,10 @@
 /***************************/
 
 // Constructeur par défaut
-Expr::Expr() : nature(Null), nb_fils(0), gauche(nullptr), droite(nullptr) 
+Expr::Expr() : nature(CstInt), nb_fils(0), gauche(nullptr), droite(nullptr) 
 {
     // On affecte la valeur null à l'expression
-    value.nullValue = true;
+    value.intValue = 0;
 }
 
 // Constructeur de constante entière
@@ -91,9 +92,6 @@ Expr::Expr(const Expr& other)
     case Binary_op:
         value.binaryOpValue = other.value.binaryOpValue;
         break;
-    case Null:
-        value.nullValue = other.value.nullValue;
-        break;
     default:
         throw invalid_argument("Erreur (constructeur par copie) : L'expression n'est pas reconnue");
         break;
@@ -141,9 +139,6 @@ Expr& Expr::operator=(const Expr& other) {
                 break;
             case Binary_op:
                 value.binaryOpValue = other.value.binaryOpValue;
-                break;
-            case Null:
-                value.nullValue = other.value.nullValue;
                 break;
             default:
                 throw invalid_argument("Erreur (operator=) : L'expression n'est pas reconnue");
@@ -233,8 +228,7 @@ bool Expr::operator==(const Expr& other) const
 
 //méthode qui affiche l'expression
 void Expr::affiche() const
-{   assert(nature != Null);
-    
+{
     switch (nature)
     {
     case CstInt:
@@ -347,6 +341,60 @@ void Expr::derive(const Expr v)
         throw invalid_argument("Erreur (derive) : L'expression n'est pas reconnue");
         break;
     }
+
+}
+
+// modifie l’expression courante en rempla¸cant toutes les occurrences de la variable symbolique var par l’expression exp.
+void Expr::subs(const Expr* var, const Expr* exp)
+{
+    // il faut que var soit une Var
+    if (var->nature != Var)
+        throw invalid_argument("Erreur (subs) : l'argument1 (var) n'est pas une variable");
+    
+    //il faut que exp soit non nullptr
+    if (!exp)
+        throw invalid_argument("Erreur (subs) : l'argument 2 (exp) ne doit pas etre nullptr");
+
+    //parcour de l'arbre en profondeur et si c'est une feuille alors si c'est la meme variable que var on remplace avec l'operateur d'affectation
+    
+    //si this == var on remplace par exp
+    if (*this == *var)
+    {
+        *this = *exp;
+        return;
+    }
+
+    if (gauche)
+        gauche->subs(var, exp);
+
+    if (droite)
+        droite->subs(var, exp);
+
+    return;
+
+}
+
+// Méthode qui evalue l'expression
+double Expr::eval() const
+{
+    switch(nature)
+    {
+    case CstInt:
+        return static_cast<double>(value.intValue);
+    case CstSymb:
+        return this->eval_symb();
+    case Unary_op:
+        return this->eval_unary();
+    case Binary_op:
+        return this->eval_binary();
+    case Var:
+        throw invalid_argument("Erreur (eval) : Il ne faut pas de variable pour évaluer une expression");
+        break;
+    default:    
+        throw invalid_argument("Erreur (derive) : L'expression n'est pas reconnue");
+        break;
+    }
+
 
 }
 
@@ -939,6 +987,76 @@ void Expr::derive_binary(const Expr v)
 
             *this = (Expr(Mul, Expr(n), Expr(Mul, f_prime, Expr(Pow, f, Expr(n-1)))));
         }
+        break;
+    }
+}
+
+// Méthode qui renvoie la valeur flottante d'une constante symbolique
+double Expr::eval_symb() const
+{
+    if (this->nature != CstSymb)
+        throw invalid_argument("Erreur (eval_symb) : ce n'est pas une constante symbolique connue");
+
+    switch(value.cstValue)
+    {
+    case pi:
+        return M_PI;
+    case e:
+        return M_E;
+    case i:
+        throw invalid_argument("Erreur (eval_symb) : i n'a pas de valeur réel");
+    default:
+        throw invalid_argument("Erreur (eval_symb) : L'expression n'est pas reconnue");
+    }
+
+}
+
+// Méthode qui renvoie la valeur flottante d'une expression unaire
+double Expr::eval_unary() const
+{
+    if (this->nature != Unary_op)
+    throw invalid_argument("Erreur (eval_unary) : ce n'est pas une expression unaire");
+
+    switch (value.unaryOpValue)
+    {
+    case Sqrt:
+        return sqrt(gauche->eval());
+    case Neg:
+        return -gauche->eval();
+    case Ln:
+        return log(gauche->eval());
+    case Exp:
+        return exp(gauche->eval());
+    case Cos:
+        return cos(gauche->eval());
+    case Sin:
+        return sin(gauche->eval());
+    default:
+        throw invalid_argument("Erreur (eval_unary) : L'opérateur unaire n'est pas reconnu");
+        break;
+    }
+}
+
+// Méthode qui renvoie la valeur flottante d'une expression binaire
+double Expr::eval_binary() const
+{
+    if (this->nature != Binary_op)
+    throw invalid_argument("Erreur (eval_binary) : ce n'est pas une expression binaire");
+
+    switch (value.binaryOpValue)
+    {
+    case Add:
+        return gauche->eval() + droite->eval();
+    case Sub:
+        return gauche->eval() - droite->eval();
+    case Mul:
+        return gauche->eval() * droite->eval();
+    case Div:
+        return gauche->eval() / droite->eval();
+    case Pow:
+        return pow(gauche->eval(), droite->eval());
+    default:
+        throw invalid_argument("Erreur (eval_binary) : L'opérateur binaire n'est pas reconnu");
         break;
     }
 }

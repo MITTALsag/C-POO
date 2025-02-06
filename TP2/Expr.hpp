@@ -44,7 +44,6 @@ typedef enum CstSymb_t { pi , e , i }CstSymb_t;
     - Var         : représentant une variable (sera représenter par un char)
     - Unary_op_t  : représentant une opération unaire (sera représenter par un Unary_op_t)
     - Binary_op_t : représentant une opération binaire (sera représenter par un Binary_op_t)
-    - Null        : represente la non valeur
 
 * Remarque : 
     - CstInt, CstSymb, Null et Var sont des feuilles de l'arbre d'expression.
@@ -52,7 +51,7 @@ typedef enum CstSymb_t { pi , e , i }CstSymb_t;
     - Binary_op_t aura deux fils dans l'arbre.
 
 */
-typedef enum Nature_t { CstInt , CstSymb , Var , Unary_op, Binary_op, Null }Nature_t;
+typedef enum Nature_t { CstInt , CstSymb , Var , Unary_op, Binary_op }Nature_t;
 
 
 /*
@@ -99,7 +98,7 @@ public:
 /****** Constructeurs ******/
 /***************************/
 
-    // Constructeur par défaut
+    // Constructeur par défaut cree une Expr(0)
     Expr();
 
     // Constructeur de constante entière
@@ -155,16 +154,12 @@ public:
 
     //méthode qui dérive selon une variable représenter par v.
     void derive(const Expr v);
+    
+    // modifie l’expression courante en rempla¸cant toutes les occurrences de la variable symbolique var par l’expression exp.
+    void subs(const Expr* var, const Expr* exp);
 
-/**********************************/
-/*********** Accesseurs ***********/
-/**********************************/
-
-    //Méthode qui retourne la nature de l'expression
-    Nature_t get_nature() const { return nature; }
-
-    //Méthode qui retourne la valeur du noeud courant
-    //Value get_value() const;
+    // Méthode qui evalue l'expression
+    double eval() const;
 
 private:
 /***************************/
@@ -204,6 +199,16 @@ private:
 
     // Méthode qui dérive une expression binaire
     void derive_binary(const Expr v);
+
+    // Méthode qui renvoie la valeur flottante d'une constante symbolique
+    double eval_symb() const;
+
+    // Méthode qui renvoie la valeur flottante d'une expression unaire
+    double eval_unary() const;
+
+    // Méthode qui renvoie la valeur flottante d'une expression binaire
+    double eval_binary() const;
+
 };
 
 #endif

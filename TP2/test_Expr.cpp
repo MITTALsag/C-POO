@@ -23,6 +23,10 @@ int main() {
     test_derive_unary();
     test_derive_binary();
 
+    test_subs();
+
+    test_eval();
+
     std::cout << std::endl;
     std::cout << "Test du sujet : " << std::endl;
     test_simplifie();

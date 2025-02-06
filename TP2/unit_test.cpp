@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdexcept>
+#include <math.h>
 #include "Expr.hpp"
 
 using namespace std;
@@ -10,7 +11,7 @@ using namespace std;
 /* test le constructeur par défaut */
 void test_constructeur_par_defaut() {
     Expr expr;
-    if (expr.get_nature() != Null) {
+    if (expr != Expr(0)) {
         cout << "Échec: test_constructeur_par_defaut" << endl;
     } else {
         cout << "Réussi: test_constructeur_par_defaut" << endl;
@@ -667,5 +668,144 @@ void test_derive_binary()
         cout << "Réussi: test_derive_binary" << endl;
     } else {
         cout << "Échec: test_derive_binary" << endl;
+    }
+}
+
+
+/* Teste la fonction de substitution */
+void test_subs() 
+{
+    struct Test {
+        Expr expr;          // Expression de départ
+        Expr var;           // Variable à remplacer
+        Expr remplacement;  // Expression de remplacement
+        Expr resultat_attendu; // Résultat attendu après substitution
+    };
+
+    Test tests[] = {
+        {Expr('x'), Expr('x'), Expr(42), Expr(42)},  // Substitution d'une variable seule
+        {Expr('x'), Expr('y'), Expr(42), Expr('x')}, // Substitution sans effet (var ≠ expr)
+        {Expr(Add, Expr('x'), Expr(2)), Expr('x'), Expr(42), Expr(Add, Expr(42), Expr(2))}, // Substitution dans une addition
+        {Expr(Mul, Expr('x'), Expr('y')), Expr('x'), Expr(3), Expr(Mul, Expr(3), Expr('y'))}, // Substitution dans une multiplication
+        {Expr(Add, Expr('x'), Expr('x')), Expr('x'), Expr(1), Expr(Add, Expr(1), Expr(1))}, // Substitution multiple
+        {Expr(Add, Expr('x'), Expr('y')), Expr('y'), Expr(Mul, Expr(2), Expr('x')), Expr(Add, Expr('x'), Expr(Mul, Expr(2), Expr('x')))} // Substitution avec une expression plus complexe
+    };
+
+    bool all_passed = true;
+
+    for (const auto& test : tests) {
+        try {
+            Expr expr_modifie = test.expr;
+            expr_modifie.subs(&test.var, &test.remplacement);
+
+            if (expr_modifie != test.resultat_attendu) {
+                cout << "Échec : Substitution de ";
+                test.var.affiche();
+                cout << " par ";
+                test.remplacement.affiche();
+                    cout << " dans ";
+                    test.expr.affiche();
+                    cout << " donne ";
+                    expr_modifie.affiche();
+                    cout << " au lieu de ";
+                    test.resultat_attendu.affiche();
+                    cout << endl;
+                all_passed = false;
+            }
+        } catch (const exception& e) {
+            cout << "Exception lors de la substitution dans ";
+            test.expr.affiche();
+                cout << " : " << e.what() << endl;
+            all_passed = false;
+        }
+    }
+
+    if (all_passed) {
+        cout << "Réussi : test_subs" << endl;
+    } else {
+        cout << "Échec : test_subs" << endl;
+    }
+}
+
+
+/* Teste la fonction d'évaluation (eval) */
+void test_eval() 
+{
+    struct Test {
+        Expr expr;             // Expression de départ
+        double resultat_attendu; // Résultat attendu après évaluation
+    };
+
+    Test tests[] = {
+        {Expr(5), 5.0},                            // Constante simple
+        {Expr(Add, Expr(3), Expr(2)), 5.0},        // Addition simple (3 + 2)
+        {Expr(Mul, Expr(3), Expr(2)), 6.0},        // Multiplication simple (3 * 2)
+        {Expr(Add, Expr(1), Expr(Mul, Expr(3), Expr(2))), 7.0},  // (1 + (3 * 2)) => 7
+        {Expr(Add, Expr(2), Expr(Mul, Expr(2), Expr(3))), 8.0},  // (2 + (2 * 3)) => 8
+        {Expr(Mul, Expr(Add, Expr(2), Expr(3)), Expr(4)), 20.0},  // ((2 + 3) * 4) => 20
+
+        // Tests avec sqrt
+        {Expr(Sqrt, Expr(9)), 3.0},                // sqrt(9) => 3
+        {Expr(Sqrt, Expr(25)), 5.0},               // sqrt(25) => 5
+        {Expr(Sqrt, Expr(2)), sqrt(2)},        // sqrt(2) 
+
+        // Tests avec ln (logarithme népérien)
+        {Expr(Ln, Expr("e")), 1.0},                // ln(e) => 1
+        {Expr(Ln, Expr(1)), 0.0},                  // ln(1) => 0
+        {Expr(Ln, Expr(10)), log(10)},   // ln(10)
+
+        // Tests avec exp (exponentielle)
+        {Expr(Exp, Expr(1)), exp(1)},   // exp(1) => e
+        {Expr(Exp, Expr(0)), 1.0},                 // exp(0) => 1
+        {Expr(Exp, Expr(2)), exp(2)},  // exp(2) => approx 7.3890560989306495
+
+        // Tests avec cos
+        {Expr(Cos, Expr(0)), 1.0},                 // cos(0) => 1
+        {Expr(Cos, Expr(Div, Expr("pi"), 2)), 0.0},               // cos(π/2) => 0
+        {Expr(Cos, Expr("pi")), -1.0},             // cos(π) => -1
+
+        // Tests avec sin
+        {Expr(Sin, Expr(0)), 0.0},                 // sin(0) => 0
+        {Expr(Sin, Expr(Div, Expr("pi"), 2)), 1.0},          // sin(π/2) => 1
+        {Expr(Sin, Expr("pi")), 0.0},              // sin(π) => 0
+
+        // Tests avec π
+        {Expr(Mul, Expr("pi"), Expr(2)), 2*M_PI},  // π * 2 => 2π
+        {Expr(Add, Expr("pi"), Expr(1)), M_PI + 1},  // π + 1 => π + 1
+        {Expr(Sub, Expr("pi"), Expr(1)), M_PI - 1},  // π - 1 => π - 1
+
+        // Tests avec e
+        {Expr(Mul, Expr("e"), Expr(2)), M_E * 2},    // e * 2 => 2e
+        {Expr(Add, Expr("e"), Expr(1)), M_E + 1},    // e + 1 => e + 1
+        {Expr(Sub, Expr("e"), Expr(1)), M_E - 1},    // e - 1 => e - 1
+    };
+
+    bool all_passed = true;
+    const double tolerance = 1e-12;  // Tolérance de comparaison (1e-12)
+
+    for (const auto& test : tests) {
+        try {
+            double result = test.expr.eval();  // Évaluation de l'expression
+
+            // Comparaison avec une tolérance
+            if (fabs(result - test.resultat_attendu) > tolerance) {
+                cout << "Échec : L'évaluation de ";
+                test.expr.affiche();
+                    cout << " donne " << result
+                     << " au lieu de " << test.resultat_attendu << endl;
+                all_passed = false;
+            }
+        } catch (const exception& e) {
+            cout << "Exception lors de l'évaluation de ";
+            test.expr.affiche();
+                 cout << " : " << e.what() << endl;
+            all_passed = false;
+        }
+    }
+
+    if (all_passed) {
+        cout << "Réussi : test_eval" << endl;
+    } else {
+        cout << "Échec : test_eval" << endl;
     }
 }

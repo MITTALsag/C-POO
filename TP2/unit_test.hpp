@@ -1,6 +1,7 @@
 #ifndef UNIT_TEST
 #define UNIT_TEST
 
+
 /* test le constructeur par défaut */
 void test_constructeur_par_defaut();
 
@@ -45,4 +46,10 @@ void test_derive_unary();
 
 /* Test de la dérivation pour des opérateurs binaires */
 void test_derive_binary();
+
+/* Teste la fonction de substitution */
+void test_subs();
+
+/* Teste la fonction d'évaluation (eval) */
+void test_eval();
 #endif
