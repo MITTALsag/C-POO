@@ -4,12 +4,12 @@ CXXFLAGS= -g -std=c++17 -Wall -Wextra -Werror
 SRC = Expr.cpp
 OBJ = Expr.o unit_test.o
 
-EXEC =  test_Expr
+EXEC =  Livrable1
 all : $(EXEC)
 
 
 
-test_Expr : $(OBJ) test_Expr.o
+Livrable1 : $(OBJ) Livrable1.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 
