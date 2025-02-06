@@ -12,6 +12,8 @@ int main() {
     test_constructeur_binaire();
     test_constructeur_copie();
 
+    test_egalite();
+
     test_affectation();
     
     test_operateur_unaire();

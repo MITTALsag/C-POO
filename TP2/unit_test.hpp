@@ -22,6 +22,9 @@ void test_constructeur_binaire();
 /* Test le construvteur de copie (profonde) */
 void test_constructeur_copie();
 
+/* Teste l'égalité entre deux expressions */
+void test_egalite();
+
 // Fonction de test pour l'affectation
 void test_affectation();
 

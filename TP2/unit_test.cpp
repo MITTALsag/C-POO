@@ -5,6 +5,8 @@
 using namespace std;
 
 
+
+
 /* test le constructeur par défaut */
 void test_constructeur_par_defaut() {
     Expr expr;
@@ -18,13 +20,13 @@ void test_constructeur_par_defaut() {
 /* test le constructeur d'entier */
 void test_constructeur_cst_int() {
     Expr expr(42);
-    if (expr.get_nature() != CstInt || expr.get_value().intValue != 42) {
+    if (expr != Expr(42)) {
         cout << "Échec: test_constructeur_cst_int" << endl;
         return;
     } 
 
     Expr expr2(-12);
-    if (expr2.get_nature() != CstInt || expr2.get_value().intValue != -12) {
+    if (expr2 != Expr(-12)) {
         cout << "Échec: test_constructeur_cst_int" << endl;
         return;
     }
@@ -51,10 +53,12 @@ void test_constructeur_cst_symb() {
     for (const auto& test : tests) {
         try {
             Expr expr(test.input);
-            if (expr.get_value().cstValue != test.expected_value) {
+            if (expr != Expr(test.input)) {
                 cout << "Échec pour l'entrée : " << test.input 
                      << " (attendu : " << test.expected_value 
-                     << ", obtenu : " << expr.get_value().cstValue << ")" << endl;
+                     << ", obtenu : ";
+                     expr.affiche();
+                     cout << ")" << endl;
                 all_passed = false;
             }
         } catch (const exception& e) {
@@ -75,7 +79,7 @@ void test_constructeur_cst_symb() {
 /* test le constructeur de variable */
 void test_constructeur_variable() {
     Expr expr('x');
-    if (expr.get_nature() != Var || expr.get_value().charValue != 'x') {
+    if (expr != Expr('x')) {
         cout << "Échec: test_constructeur_variable" << endl;
     } else {
         cout << "Réussi: test_constructeur_variable" << endl;
@@ -102,11 +106,11 @@ void test_constructeur_unaire() {
     for (const auto& test : tests) {
         try {
             Expr expr(test.op, test.gauche);  // Construction de l'expr unaire
-            if (expr.get_nature() != Unary_op || expr.get_value().unaryOpValue != test.expected_op 
-                || expr.get_value_left_child().intValue != test.expected_value) 
+            if (expr != Expr(test.op, test.gauche)) 
             {
                 cout << "Échec pour l'opération unaire : " << test.expected_op 
-                     << " avec valeur : " << test.gauche.get_value().intValue << endl;
+                     << " avec valeur : ";
+                     test.gauche.affiche();
                 all_passed = false;
             }
         } catch (const exception& e) {
@@ -122,7 +126,7 @@ void test_constructeur_unaire() {
 
     // Modification de l'enfant
     gauche = Expr(4);
-    if (expr.get_value_left_child().intValue == 4) {
+    if (expr == Expr(Ln, Expr(4))) {
         cout << "Échec: test_constructeur_unaire (copie profonde)" << endl;
         all_passed = false;
     }
@@ -158,8 +162,7 @@ void test_constructeur_binaire() {
     for (const auto& test : tests) {
         try {
             Expr expr(test.op, Expr(test.left_value), Expr(test.right_value));
-            if (expr.get_nature() != Binary_op || expr.get_value().binaryOpValue != test.expected_op
-                || expr.get_value_left_child().intValue != test.expected_left_value)
+            if (expr != Expr(test.op, Expr(test.left_value), Expr(test.right_value)))
             {
                 cout << "Échec pour l'opération binaire : " << test.expected_op 
                      << " avec enfants : (" << test.left_value << ", " << test.right_value << ")" << endl;
@@ -180,7 +183,7 @@ void test_constructeur_binaire() {
     // Modification de l'enfant
     gauche = Expr(4);
     droite = Expr(5);
-    if (expr.get_value_left_child().intValue == 4 || expr.get_value_right_child().intValue == 5) {
+    if (expr == Expr(Add, Expr(4), Expr(5))) {
         cout << "Échec: test_constructeur_binaire (copie profonde)" << endl;
         all_passed = false;
     }
@@ -214,12 +217,69 @@ void test_constructeur_copie() {
     droit = Expr('y');  // Changer la variable
 
     // Vérification que la copie n'a pas été affectée par les modifications de l'original
-    if (copie.get_value_left_child().intValue == 100 || copie.get_value_right_child().charValue == 'y'
-        || original.get_value_left_child().intValue == 100 || original.get_value_right_child().charValue == 'y') 
+    if (copie == Expr(Add, gauche, droit)) 
     {
         cout << "Échec: test_constructeur_copie (copie non indépendante)" << endl;
     } else {
         cout << "Réussi: test_constructeur_copie" << endl;
+    }
+}
+
+/* Teste l'égalité entre deux expressions */
+void test_egalite() 
+{
+    struct Test {
+        Expr expr1;               // Première expression à tester
+        Expr expr2;               // Deuxième expression à tester
+        bool sont_egales;        // Résultat attendu : vrai si égales, faux sinon
+    };
+
+    Test tests[] = {
+        {Expr(42), Expr(42), true},            // Test de deux constantes égales
+        {Expr(42), Expr(43), false},           // Test de deux constantes différentes
+        {Expr('x'), Expr('x'), true},          // Test de deux variables égales
+        {Expr('x'), Expr('y'), false},         // Test de deux variables différentes
+        {Expr(Add, Expr(2), Expr(3)), Expr(Add, Expr(2), Expr(3)), true},  // Test de deux opérations binaires égales
+        {Expr(Add, Expr(2), Expr(3)), Expr(Add, Expr(3), Expr(2)), true}, // Test de deux opérations binaires egal (commutatif)
+        {Expr(Mul, Expr(2), Expr(3)), Expr(Mul, Expr(3), Expr(2)), true},  // Test de multiplication commutative
+        {Expr(Div, Expr(2), Expr(3)), Expr(Div, Expr(3), Expr(2)), false},  // Test de multiplication non commutative
+        {Expr(Sub, Expr(2), Expr(3)), Expr(Sub, Expr(3), Expr(2)), false},  // Test de multiplication non commutative
+    };
+
+    bool all_passed = true;
+
+    for (const auto& test : tests) {
+        try {
+            // Test de l'égalité
+            if (test.expr1 == test.expr2 && !test.sont_egales) {
+                cout << "Échec : les expressions ";
+                test.expr1.affiche();
+                cout << " et ";
+                test.expr2.affiche();
+                cout << " sont égales, mais elles ne devraient pas l'être." << endl;
+                all_passed = false;
+            } else if (!(test.expr1 == test.expr2) && test.sont_egales) {
+                cout << "Échec : les expressions ";
+                test.expr1.affiche();
+                cout << " et ";
+                test.expr2.affiche();
+                cout << " ne sont pas égales, mais elles devraient l'être." << endl;
+                all_passed = false;
+            }
+        } catch (const exception& e) {
+            cout << "Exception pour la comparaison entre ";
+            test.expr1.affiche();
+            cout << " et ";
+            test.expr2.affiche();
+            cout << " : " << e.what() << endl;
+            all_passed = false;
+        }
+    }
+
+    if (all_passed) {
+        cout << "Réussi : test_egalite" << endl;
+    } else {
+        cout << "Échec : test_egalite" << endl;
     }
 }
 
@@ -286,33 +346,32 @@ void test_operateur_unaire() {
         Nature_t nature;              // Nature attendue de l'expression
         Expr operand_value;            // Stocke une valeur entière comme opérande si nature == CstInt
         bool expect_simplified;       // Indique si l'expression devrait être simplifiée
-        int simplified_value;         // Valeur attendue après simplification (si applicable)
+        Expr simplified_value;         // Valeur attendue après simplification (si applicable)
     };
 
     Test tests[] = {
-        {Neg, CstInt, Expr(5), true, -5},  // Test Neg avec un entier positif
-        {Neg, CstInt, Expr(0), true, 0},   // Test Neg avec 0
-        {Neg, CstInt, Expr(-7), true, 7},  // Test Neg avec un entier négatif
-        {Neg, CstInt, Expr(Neg, 1), true, 1},  // Test Neg avec Neg(1) (doit être simplifié en 1)
+        {Neg, CstInt, Expr(5), true, Expr(-5)},  // Test Neg avec un entier positif
+        {Neg, CstInt, Expr(0), true, Expr(0)},   // Test Neg avec 0
+        {Neg, CstInt, Expr(-7), true, Expr(7)},  // Test Neg avec un entier négatif
+        {Neg, CstInt, Expr(Neg, 1), true, Expr(1)},  // Test Neg avec Neg(1) (doit être simplifié en 1)
 
-        {Sqrt, CstInt, Expr(16), true, 4}, // Test Sqrt avec un carré parfait
-        {Sqrt, CstInt, Expr(0), true, 0},  // Test Sqrt avec 0
-        {Sqrt, CstInt, Expr(1), true, 1},  // Test Sqrt avec 1
-        {Sqrt, CstInt, Expr(-1), false, 0}, // Test Sqrt avec un négatif (attend une exception)
+        {Sqrt, CstInt, Expr(16), true, Expr(4)}, // Test Sqrt avec un carré parfait
+        {Sqrt, CstInt, Expr(0), true, Expr(0)},  // Test Sqrt avec 0
+        {Sqrt, CstInt, Expr(1), true, Expr(1)},  // Test Sqrt avec 1
+        {Sqrt, CstInt, Expr(-1), false, Expr(0)}, // Test Sqrt avec un négatif (attend une exception)
         
-
-        {Ln, CstInt, Expr(1), true, 0},                 // Test Ln avec 1
-        {Ln, CstSymb, Expr("e"), true, 1},                // Test Ln avec e
-        {Ln, Unary_op, Expr(Exp, Expr(4)), true, 4},    // Test Ln avec Exp(4)
+        {Ln, CstInt, Expr(1), true, Expr(0)},                 // Test Ln avec 1
+        {Ln, CstSymb, Expr("e"), true, Expr(1)},                // Test Ln avec e
+        {Ln, Unary_op, Expr(Exp, Expr(4)), true, Expr(4)},    // Test Ln avec Exp(4)
 
         {Exp, CstInt, Expr(0), true, 1},                //Test Exp avec 0
-        {Exp, Unary_op, Expr(Ln, Expr(2)), true, 2},    //Test Exp avec Ln(2)
+        {Exp, Unary_op, Expr(Ln, Expr(2)), true, Expr(2)},    //Test Exp avec Ln(2)
 
-        {Cos, CstInt, Expr(0), true, 1},    // Test Cos avec 0
-        {Cos, CstSymb, Expr("pi"), true, -1},    // Test Cos avec pi
+        {Cos, CstInt, Expr(0), true, Expr(1)},    // Test Cos avec 0
+        {Cos, CstSymb, Expr("pi"), true, Expr(-1)},    // Test Cos avec pi
 
-        {Sin, CstInt, Expr(0), true, 0},    // Test Sin avec 0
-        {Sin, CstSymb, Expr("pi"), true, 0},    // Test Sin avec pi
+        {Sin, CstInt, Expr(0), true, Expr(0)},    // Test Sin avec 0
+        {Sin, CstSymb, Expr("pi"), true, Expr(0)},    // Test Sin avec pi
     };
 
     bool all_passed = true;
@@ -324,7 +383,7 @@ void test_operateur_unaire() {
             Expr expr(test.op, operand);
             
             // Vérifie que la nature et l'opérateur sont corrects
-            if (expr.get_nature() != Unary_op || expr.get_value().unaryOpValue != test.op) {
+            if (expr != Expr(test.op, test.operand_value)) {
                 cout << "Échec (nature ou opérateur) pour l'opérateur : " << test.op << endl;
                 all_passed = false;
                 continue;
@@ -333,11 +392,12 @@ void test_operateur_unaire() {
             // Simplification si attendue
             if (test.expect_simplified) {
                 expr.simplifie();
-                if (expr.get_nature() != CstInt || expr.get_value().intValue != test.simplified_value) {
+                if (expr != test.simplified_value) {
                     cout << "Échec (simplification) pour l'opérateur : " << test.op 
                          << " avec l'opérande : " ;
                          test.operand_value.affiche();
-                    cout << "Résultat obtenu : " << expr.get_value().intValue << endl;
+                    cout << "Résultat obtenu : ";
+                    expr.affiche();
                     all_passed = false;
                 }
             }
@@ -365,51 +425,52 @@ void test_operateur_binaire() {
         Expr left_value;         // Valeur du côté gauche
         Expr right_value;        // Valeur du côté droit
         bool expect_simplified; // Indique si l'expression doit être simplifiée
-        int simplified_value;   // Résultat attendu après simplification
+        Expr simplified_value;   // Résultat attendu après simplification
     };
 
     Test tests[] = {
-        {Add, Expr(6), Expr(7), true, 13},       // Test addition
-        {Add, Expr(0), Expr(0), true, 0},        // Test addition avec zéro
-        {Add, Expr(0), Expr(5), true, 5},        // Test addition avec zéro
-        {Add, Expr(5), Expr(0), true, 5},        // Test addition avec zéro
-        {Add, Expr(5), Expr(-5), true, 0},       // Test addition avec un négatif
+        {Add, Expr(6), Expr(7), true, Expr(13)},       // Test addition
+        {Add, Expr(0), Expr(0), true, Expr(0)},        // Test addition avec zéro
+        {Add, Expr(0), Expr(5), true, Expr(5)},        // Test addition avec zéro
+        {Add, Expr(5), Expr(0), true, Expr(5)},        // Test addition avec zéro
+        {Add, Expr(5), Expr(-5), true, Expr(0)},       // Test addition avec un négatif
+        {Add, Expr('x'), Expr(0), true, Expr('x')},
 
-        {Sub, Expr(10), Expr(5), true, 5},       // Test soustraction
-        {Sub, Expr(0), Expr(0), true, 0},        // Test soustraction avec zéro
-        {Sub, Expr(0), Expr(5), true, -5},       // Test soustraction avec zéro
-        {Sub, Expr(5), Expr(0), true, 5},        // Test soustraction avec zéro
-        {Sub, Expr(5), Expr(5), true, 0},        // Test soustraction avec lui-même
-        {Sub, Expr(5), Expr(-5), true, 10},      // Test soustraction avec un négatif
+        {Sub, Expr(10), Expr(5), true, Expr(5)},       // Test soustraction
+        {Sub, Expr(0), Expr(0), true, Expr(0)},        // Test soustraction avec zéro
+        {Sub, Expr(0), Expr(5), true, Expr(-5)},       // Test soustraction avec zéro
+        {Sub, Expr(5), Expr(0), true, Expr(5)},        // Test soustraction avec zéro
+        {Sub, Expr(5), Expr(5), true, Expr(0)},        // Test soustraction avec lui-même
+        {Sub, Expr(5), Expr(-5), true, Expr(10)},      // Test soustraction avec un négatif
 
-        {Mul, Expr(3), Expr(4), true, 12},       // Test multiplication
-        {Mul, Expr(0), Expr(7), true, 0},        // Test multiplication avec zéro
-        {Mul, Expr(7), Expr(0), true, 0},        // Test multiplication avec zéro
-        {Mul, Expr(5), Expr(1), true, 5},        // Test multiplication avec un
-        {Mul, Expr(1), Expr(5), true, 5},        // Test multiplication avec un
-        {Mul, Expr(0), Expr(0), true, 0},        // Test multiplication avec zéro
-        {Mul, Expr(1), Expr(1), true, 1},        // Test multiplication avec 1
-        {Mul, Expr(1), Expr(0), true, 0},        // Test multiplication avec 0
+        {Mul, Expr(3), Expr(4), true, Expr(12)},       // Test multiplication
+        {Mul, Expr(0), Expr(7), true, Expr(0)},        // Test multiplication avec zéro
+        {Mul, Expr(7), Expr(0), true, Expr(0)},        // Test multiplication avec zéro
+        {Mul, Expr(5), Expr(1), true, Expr(5)},        // Test multiplication avec un
+        {Mul, Expr(1), Expr(5), true, Expr(5)},        // Test multiplication avec un
+        {Mul, Expr(0), Expr(0), true, Expr(0)},        // Test multiplication avec zéro
+        {Mul, Expr(1), Expr(1), true, Expr(1)},        // Test multiplication avec 1
+        {Mul, Expr(1), Expr(0), true, Expr(0)},        // Test multiplication avec 0
 
-        {Div, Expr(8), Expr(2), true, 4},        // Test division
-        {Div, Expr(0), Expr(1), true, 0},        // Test division avec zéro en numérateur
-        {Div, Expr(0), Expr(-1), true, 0},       // Test division par zéro (attend une exception)
-        {Div, Expr(8), Expr(4), true, 2},        // Test division simple
-        {Div, Expr(-8), Expr(4), true, -2},      // Test division avec un négatif
-        {Div, Expr(8), Expr(-4), true, -2},      // Test division avec un négatif
-        {Div, Expr(-8), Expr(-4), true, 2},      // Test division avec un négatif
-        {Div, Expr(1), Expr(1), true, 1},        // Test division 1/1
-        {Div, Expr(7), Expr(0), false, 0},       // Test division par zéro (attend une exception)
-        {Div, Expr(10), Expr(10), true, 1},      // Test division même nombre en haut et en bas
+        {Div, Expr(8), Expr(2), true, Expr(4)},        // Test division
+        {Div, Expr(0), Expr(1), true, Expr(0)},        // Test division avec zéro en numérateur
+        {Div, Expr(0), Expr(-1), true, Expr(0)},       // Test division par zéro (attend une exception)
+        {Div, Expr(8), Expr(4), true, Expr(2)},        // Test division simple
+        {Div, Expr(-8), Expr(4), true, Expr(-2)},      // Test division avec un négatif
+        {Div, Expr(8), Expr(-4), true, Expr(-2)},      // Test division avec un négatif
+        {Div, Expr(-8), Expr(-4), true, Expr(2)},      // Test division avec un négatif
+        {Div, Expr(1), Expr(1), true, Expr(1)},        // Test division 1/1
+        {Div, Expr(7), Expr(0), false, Expr(0)},       // Test division par zéro (attend une exception)
+        {Div, Expr(10), Expr(10), true, Expr(1)},      // Test division même nombre en haut et en bas
 
-        {Pow, Expr(2), Expr(3), true, 8},        // Test puissance (2^3)
-        {Pow, Expr(3), Expr(2), true, 9},        // Test puissance (3^2)
-        {Pow, Expr(5), Expr(0), true, 1},        // Test puissance avec exposant zéro
-        {Pow, Expr(0), Expr(5), true, 0},        // Test puissance avec base zéro
-        {Pow, Expr(-2), Expr(3), true, -8},      // Test puissance avec base négative et exposant impair
-        {Pow, Expr(-2), Expr(2), true, 4},       // Test puissance avec base négative et exposant pair
-        {Pow, Expr(1), Expr(100), true, 1},      // Test puissance avec base égale à 1
-        {Pow, Expr(0), Expr(0), false, 0},       // Test puissance 0^0 (attend une exception)
+        {Pow, Expr(2), Expr(3), true, Expr(8)},        // Test puissance (2^3)
+        {Pow, Expr(3), Expr(2), true, Expr(9)},        // Test puissance (3^2)
+        {Pow, Expr(5), Expr(0), true, Expr(1)},        // Test puissance avec exposant zéro
+        {Pow, Expr(0), Expr(5), true, Expr(0)},        // Test puissance avec base zéro
+        {Pow, Expr(-2), Expr(3), true, Expr(-8)},      // Test puissance avec base négative et exposant impair
+        {Pow, Expr(-2), Expr(2), true, Expr(4)},       // Test puissance avec base négative et exposant pair
+        {Pow, Expr(1), Expr(100), true, Expr(1)},      // Test puissance avec base égale à 1
+        {Pow, Expr(0), Expr(0), false, Expr(0)},       // Test puissance 0^0 (attend une exception)
     };
 
     bool all_passed = true;
@@ -425,7 +486,7 @@ void test_operateur_binaire() {
 
 
             // Vérifie que la nature et l'opérateur sont corrects
-            if (expr.get_nature() != Binary_op || expr.get_value().binaryOpValue != test.op) {
+            if (expr != Expr(test.op, test.left_value, test.right_value)) {
                 cout << "Échec (nature ou opérateur) pour l'opérateur : " << test.op << endl;
                 all_passed = false;
                 continue;
@@ -434,9 +495,10 @@ void test_operateur_binaire() {
             // Simplification si attendue
             if (test.expect_simplified) {
                 expr.simplifie();
-                if (expr.get_nature() != CstInt || expr.get_value().cstValue != test.simplified_value) {
+                if (expr != test.simplified_value) {
                     cout << "Échec (simplification) pour l'opérateur : " << test.op << endl;
-                    cout << "Résultat obtenu : " << expr.get_value().intValue << endl;
+                    cout << "Résultat obtenu : ";
+                    expr.affiche(); 
                     all_passed = false;
                 }
             }

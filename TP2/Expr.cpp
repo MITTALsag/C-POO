@@ -174,72 +174,56 @@ Expr& Expr::operator=(const Expr& other) {
     return *this; // Retourne l'objet courant pour permettre les chaines d'affectation
 }
 
+
 /*
 * opérateur de comparaison d'égalité
 * test si deux expressions sont égales
 *  Elles sont égale si l'arbre dont this qui est la racine de l'expression gauche et other qui est la racine de l'expression droite sont égaux
 * C'est une fonction récursive qui tests l'égalité des deux arbre gauche et droite
 */
-bool Expr::operator==(const Expr& droite) const
+bool Expr::operator==(const Expr& other) const
 {
-    // on verifie les attributs du neud courant et si ils sont différents alors les expressions sont différentes
-    if (!verif_egalite(this, &droite))
+    if (this->nature != other.nature || this->nb_fils != other.nb_fils)
         return false;
 
-    // on verifie les fils gauche
-    bool res1 = false;
-    // si les deux fils gauche sont non nuls
-    if (this->gauche && droite.gauche) {
-        // on teste l'égalité des deux fils gauche avec un appel récursif
-        res1 = *(this->gauche) == *(droite.gauche);
-    } 
-    // si les deux fils gauche sont nuls alors ils sont égaux
-    else if (!this->gauche && !droite.gauche) {
-        // si les deux fils gauche sont nuls alors ils sont égaux
-        res1 = true;
+    // Partie récursive pour vérifier les éventuel fils
+    // Ici *this et other ont la meme nature
+
+    switch(nature)
+    {
+    // CstInt, CstSymb, Null et Var non pas de fils
+    //donc on verifie que la valeur est la meme 
+    case CstInt:
+        return this->value.intValue == other.value.intValue;
+    case CstSymb:
+        return this->value.cstValue == other.value.cstValue;
+    case Var:
+        return this->value.charValue == other.value.charValue;
+
+    //Un opérateur unaire à un enfant gauche 
+    //donc on verifie que l'opérateur est le meme et on fais l'appelle recursif pour son enfant gauche.
+    case Unary_op:
+        return this->value.unaryOpValue == other.value.unaryOpValue && *gauche == *(other.gauche);
+
+    //Un opérateur bianire à deux fils mais l'opérateur peut etre commutatif (Mul et Add)
+    //donc on verifie que l'opérateur est le meme et on fais l'appelle recursif pour ses enfants.
+    case Binary_op:
+        if (this->value.binaryOpValue != other.value.binaryOpValue)
+            return false;
+
+        if (value.binaryOpValue == Mul || value.binaryOpValue == Add)
+            return ((*gauche == *(other.gauche) && *droite == *(other.droite)) 
+                    || 
+                   (*gauche == *(other.droite) && *droite == *(other.gauche)));
+        else
+            return *gauche == *(other.gauche) && *droite == *(other.droite);
+    
+    default:
+        throw invalid_argument("Erreur (verif_egalite) : L'expression n'est pas reconnue");
     }
-
-    // on verifie les fils droit
-    bool res2 = false;
-    // si les deux fils droit sont non nuls
-    if (this->droite && droite.droite) {
-        // on teste l'égalité des deux fils droit avec un appel récursif
-        res2 = *(this->droite) == *(droite.droite);
-    } 
-    // si les deux fils droit sont nuls alors ils sont égaux
-    else if (!this->droite && !droite.droite) {
-        res2 = true;
-    }
-
-    return res1 && res2;
 }
 
 
-/*================================================================================================================#*/
-/**********************************/
-/*********** Accesseurs ***********/
-/**********************************/
-
-//Méthode qui retourne la valeur du noeud courant
-Value Expr::get_value() const {
-    return value;
-}
-
-//Méthode qui retourne la valeur de l'expression du noeud gauche
-Value Expr::get_value_left_child() const {
-    if (gauche != nullptr)
-        return gauche->get_value();
-    else
-        throw invalid_argument("Erreur (get_value_left_child) : L'expression gauche est nulle");
-}
-
-//Méthode qui retourne la valeur de l'expression du noeud droit
-Value Expr::get_value_right_child() const {
-    if (droite != nullptr)
-        return droite->get_value();
-    else
-        throw invalid_argument("Erreur (get_value_right_child) : L'expression droite est nulle");
-}
 
 /*================================================================================================================#*/
 /********************************/
@@ -451,29 +435,7 @@ string Expr::get_binary_op_str() const
     }
 }
 
-// Méthode qui vérifie l'égalité entre deux noeud de l'arbre
-bool Expr::verif_egalite(const Expr* e1, const Expr* e2) const {
-    if (!e1 && !e2) return true;  // Les deux pointeurs sont nuls
-    if (!e1 || !e2) return false; // Un seul pointeur est nul
 
-    if (e1->nature != e2->nature || e1->nb_fils != e2->nb_fils)
-        return false;
-
-    switch (e1->nature) {
-    case CstInt:
-        return e1->value.intValue == e2->value.intValue;
-    case CstSymb:
-        return e1->value.cstValue == e2->value.cstValue;
-    case Var:
-        return e1->value.charValue == e2->value.charValue;
-    case Unary_op:
-        return e1->value.unaryOpValue == e2->value.unaryOpValue;
-    case Binary_op:
-        return e1->value.binaryOpValue == e2->value.binaryOpValue;
-    default:
-        throw invalid_argument("Erreur (verif_egalite) : L'expression n'est pas reconnue");
-    }
-}
 
 
 // Méthode qui simplifie un expression unaire

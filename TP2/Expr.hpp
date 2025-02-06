@@ -164,13 +164,7 @@ public:
     Nature_t get_nature() const { return nature; }
 
     //Méthode qui retourne la valeur du noeud courant
-    Value get_value() const;
-    
-    //Méthode qui retourne la valeur de l'expression du noeud gauche
-    Value get_value_left_child() const;
-
-    //Méthode qui retourne la valeur de l'expression du noeud droit
-    Value get_value_right_child() const;
+    //Value get_value() const;
 
 private:
 /***************************/
@@ -198,9 +192,6 @@ private:
 
     // Méthode qui retourne l'opérateur binaire en string
     string get_binary_op_str() const;
-
-    // Méthode qui vérifie l'égalité entre deux noeud de l'arbre
-    bool verif_egalite(const Expr* e1, const Expr* e2) const;
 
     // Méthode qui simplifie un expression unaire
     void simplifie_unary();
