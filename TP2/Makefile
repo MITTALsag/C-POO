@@ -2,18 +2,14 @@ CXX = g++
 CXXFLAGS= -g -std=c++17 -Wall -Wextra -Werror
 
 SRC = Expr.cpp
-OBJ = Expr.o
+OBJ = Expr.o unit_test.o
 
-EXEC =  unit_test
+EXEC =  test_Expr
 all : $(EXEC)
 
 
 
 test_Expr : $(OBJ) test_Expr.o
-	$(CXX) $(CXXFLAGS) -o $@ $^
-
-
-unit_test : $(OBJ) unit_test.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 

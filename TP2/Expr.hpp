@@ -12,7 +12,7 @@ using namespace std;
     - Sqrt : racine carrée
     - Ln   : logarithme népérien
 */
-typedef enum Unary_op_t { Neg , Sqrt , Ln }Unary_op_t;
+typedef enum Unary_op_t { Neg , Sqrt , Ln , Exp, Sin, Cos}Unary_op_t;
 
 /*
 * C'est une classe qui représente les opérations mathématiques binaires.
@@ -153,6 +153,9 @@ public:
     //méthode qui simplifie l'expression
     void simplifie();
 
+    //méthode qui dérive selon une variable représenter par v.
+    void derive(const Expr v);
+
 /**********************************/
 /*********** Accesseurs ***********/
 /**********************************/
@@ -204,6 +207,12 @@ private:
 
     // Méthode qui simplifie un expression binaire
     void simplifie_binary();
+
+    // Méthode qui dérive une expression unaire
+    void derive_unary(const Expr v);
+
+    // Méthode qui dérive une expression binaire
+    void derive_binary(const Expr v);
 };
 
 #endif

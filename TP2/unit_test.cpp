@@ -4,6 +4,8 @@
 
 using namespace std;
 
+
+/* test le constructeur par défaut */
 void test_constructeur_par_defaut() {
     Expr expr;
     if (expr.get_nature() != Null) {
@@ -13,6 +15,7 @@ void test_constructeur_par_defaut() {
     }
 }
 
+/* test le constructeur d'entier */
 void test_constructeur_cst_int() {
     Expr expr(42);
     if (expr.get_nature() != CstInt || expr.get_value().intValue != 42) {
@@ -29,6 +32,7 @@ void test_constructeur_cst_int() {
     cout << "Réussi: test_constructeur_cst_int" << endl;
 }
 
+/* test le constructeur de symbole */
 void test_constructeur_cst_symb() {
     struct Test {
         string input;
@@ -68,6 +72,7 @@ void test_constructeur_cst_symb() {
 }
 
 
+/* test le constructeur de variable */
 void test_constructeur_variable() {
     Expr expr('x');
     if (expr.get_nature() != Var || expr.get_value().charValue != 'x') {
@@ -77,6 +82,7 @@ void test_constructeur_variable() {
     }
 }
 
+/* test le constructeur d'opération unaire */
 void test_constructeur_unaire() {
     struct Test {
         Unary_op_t op;
@@ -128,6 +134,7 @@ void test_constructeur_unaire() {
     }
 }
 
+/* test le constructeur d'opération binaire */
 void test_constructeur_binaire() {
     struct Test {
         Binary_op_t op;
@@ -186,6 +193,7 @@ void test_constructeur_binaire() {
     }
 }
 
+/* Test le construvteur de copie (profonde) */
 void test_constructeur_copie() {
     // Création d'expressions initiales
     Expr gauche(42); // Constante entière
@@ -231,10 +239,11 @@ void test_affectation() {
 
     bool all_passed = true;
 
+    Expr expr(0);  // Création d'une nouvelle expression (initialisée à 0)
+
     // Exécution des tests
     for (auto& test : tests) {
         try {
-            Expr expr(0);  // Création d'une nouvelle expression (initialisée à 0)
             expr = test;  // Test de l'affectation
 
             // Vérification si la valeur après affectation est correcte
@@ -252,7 +261,7 @@ void test_affectation() {
     // Vérification de la copie profonde des fils lors de l'affectation
     Expr gauche(2);
     Expr droite(3);
-    Expr expr(Add, gauche, droite);
+    expr = Expr(Add, gauche, droite);
 
     // Modification des enfants
     gauche = Expr(4);
@@ -270,7 +279,7 @@ void test_affectation() {
     }
 }
 
-
+/* test la simplification d'opérateur unaire */
 void test_operateur_unaire() {
     struct Test {
         Unary_op_t op;                // Opérateur unaire
@@ -292,20 +301,25 @@ void test_operateur_unaire() {
         {Sqrt, CstInt, Expr(-1), false, 0}, // Test Sqrt avec un négatif (attend une exception)
         
 
-        {Ln, CstInt, Expr(1), true, 0},    // Test Ln avec 1
-        {Ln, CstSymb, Expr(e), true, 1},    // Test Ln avec e
+        {Ln, CstInt, Expr(1), true, 0},                 // Test Ln avec 1
+        {Ln, CstSymb, Expr("e"), true, 1},                // Test Ln avec e
+        {Ln, Unary_op, Expr(Exp, Expr(4)), true, 4},    // Test Ln avec Exp(4)
+
+        {Exp, CstInt, Expr(0), true, 1},                //Test Exp avec 0
+        {Exp, Unary_op, Expr(Ln, Expr(2)), true, 2},    //Test Exp avec Ln(2)
+
+        {Cos, CstInt, Expr(0), true, 1},    // Test Cos avec 0
+        {Cos, CstSymb, Expr("pi"), true, -1},    // Test Cos avec pi
+
+        {Sin, CstInt, Expr(0), true, 0},    // Test Sin avec 0
+        {Sin, CstSymb, Expr("pi"), true, 0},    // Test Sin avec pi
     };
 
     bool all_passed = true;
 
     for (const auto& test : tests) {
         try {
-            Expr operand(test.operand_value);
-            if (test.nature == CstSymb) 
-            {
-                operand = Expr("e");
-            }
-
+            Expr operand = test.operand_value;
             // Crée l'expression unaire
             Expr expr(test.op, operand);
             
@@ -344,6 +358,7 @@ void test_operateur_unaire() {
 }
 
 
+/* test la simplification d'opérateur binaire */
 void test_operateur_binaire() {
     struct Test {
         Binary_op_t op;
@@ -402,8 +417,8 @@ void test_operateur_binaire() {
     for (const auto& test : tests) {
         try {
             // Crée les opérandes sous forme de constantes entières
-            Expr left(test.left_value);
-            Expr right(test.right_value);
+            Expr left = test.left_value;
+            Expr right = test.right_value;
 
             // Crée l'expression binaire
             Expr expr(test.op, left, right);
@@ -443,7 +458,7 @@ void test_operateur_binaire() {
     }
 }
 
-
+/* test du sujet */
 void test_simplifie() {
     Expr x ('x') ;
     Expr deux (2) ;
@@ -458,18 +473,137 @@ void test_simplifie() {
     cout << endl ;
 }
 
-int main() {
-    test_constructeur_par_defaut();
-    test_constructeur_cst_int();
-    test_constructeur_cst_symb();
-    test_constructeur_variable();
-    test_constructeur_unaire();
-    test_constructeur_binaire();
-    test_constructeur_copie();
-    test_affectation();
-    test_operateur_unaire();
-    test_operateur_binaire();
-    test_simplifie();
 
-    return 0;
+/* Test de la dérivation pour des expressions simples */
+void test_derive_simple() 
+{
+    struct Test {
+        Expr expr;                // Expression à dériver
+        Expr expected_derivative; // Dérivée attendue
+    };
+
+    Test tests[] = {
+        {Expr(42), Expr(0)},              // Dérivée d'une constante
+        {Expr('x'), Expr(1)},             // Dérivée de la variable x
+        {Expr(2), Expr(0)},               // Dérivée d'une constante
+        {Expr('y'), Expr(0)},             // Dérivée d'une variable autre que x
+    };
+
+    bool all_passed = true;
+
+    for (auto& test : tests) {
+        try {
+            test.expr.derive(Expr('x'));
+            Expr derivative(test.expr);
+            derivative.simplifie();
+            if (derivative != test.expected_derivative) {
+                cout << "Échec pour l'expression : "; test.expr.affiche();
+                cout << " Résultat attendu : "; test.expected_derivative.affiche();
+                cout << " Résultat obtenu : "; derivative.affiche();
+                all_passed = false;
+            }
+        } catch (const exception& e) {
+            cout << "Exception pour l'expression : "; test.expr.affiche();
+            cout << " (" << e.what() << ")" << endl;
+            all_passed = false;
+        }
+    }
+
+    if (all_passed) {
+        cout << "Réussi: test_derive_simple" << endl;
+    } else {
+        cout << "Échec: test_derive_simple" << endl;
+    }
+}
+
+/* Test de la dérivation pour des opérateurs unaires */
+void test_derive_unary() 
+{
+    struct Test {
+        Unary_op_t op;                // Opérateur unaire
+        Expr operand_value;            // Opérande de l'opération unaire
+        Expr expected_derivative;      // Dérivée attendue
+    };
+
+    Test tests[] = {
+        {Neg, Expr('x'), Expr(-1)},              // Dérivée de -x
+        {Sqrt, Expr('x'), Expr(Div, Expr(1), Expr(Mul, Expr(2), Expr(Sqrt, Expr('x'))))}, // Dérivée de sqrt(x)
+        {Ln, Expr('x'), Expr(Div, Expr(1), Expr('x'))},      // Dérivée de ln(x)
+    };
+
+    bool all_passed = true;
+
+    for (const auto& test : tests) {
+        try {
+            Expr operand = test.operand_value;
+            Expr expr(test.op, operand);
+            expr.derive(Expr('x'));
+            Expr derivative = expr;
+            derivative.simplifie();
+            if (derivative != test.expected_derivative) {
+                cout << "Échec pour l'opération unaire : " << test.op << endl;
+                cout << " Résultat attendu : "; test.expected_derivative.affiche();
+                cout << " Résultat obtenu : "; derivative.affiche();
+                all_passed = false;
+            }
+        } catch (const exception& e) {
+            cout << "Exception pour l'opération unaire : " << test.op << endl;
+            cout << " (" << e.what() << ")" << endl;
+            all_passed = false;
+        }
+    }
+
+    if (all_passed) {
+        cout << "Réussi: test_derive_unary" << endl;
+    } else {
+        cout << "Échec: test_derive_unary" << endl;
+    }
+}
+
+/* Test de la dérivation pour des opérateurs binaires */
+void test_derive_binary() 
+{
+    struct Test {
+        Binary_op_t op;              // Opérateur binaire
+        Expr left_value;             // Valeur du côté gauche
+        Expr right_value;            // Valeur du côté droit
+        Expr expected_derivative;    // Dérivée attendue
+    };
+
+    Test tests[] = {
+        {Add, Expr('x'), Expr(5), Expr(1)},       // Dérivée de x + 5
+        {Sub, Expr('x'), Expr(5), Expr(1)},       // Dérivée de x - 5
+        {Mul, Expr('x'), Expr(5), Expr(5)},       // Dérivée de x * 5
+        {Div, Expr('x'), Expr(5), Expr(Div, Expr(1), Expr(5))}, // Dérivée de x / 5
+        {Pow, Expr('x'), Expr(2), Expr(Mul, Expr(2), Expr('x'))}, // Dérivée de x^2
+    };
+
+    bool all_passed = true;
+
+    for (const auto& test : tests) {
+        try {
+            Expr left = test.left_value;
+            Expr right = test.right_value;
+            Expr expr(test.op, left, right);
+            expr.derive(Expr('x'));
+            Expr derivative = expr;
+            derivative.simplifie();
+            if (derivative != test.expected_derivative) {
+                cout << "Échec pour l'opération binaire : " << test.op << endl;
+                cout << " Résultat attendu : "; test.expected_derivative.affiche();
+                cout << " Résultat obtenu : "; derivative.affiche();
+                all_passed = false;
+            }
+        } catch (const exception& e) {
+            cout << "Exception pour l'opération binaire : " << test.op << endl;
+            cout << " (" << e.what() << ")" << endl;
+            all_passed = false;
+        }
+    }
+
+    if (all_passed) {
+        cout << "Réussi: test_derive_binary" << endl;
+    } else {
+        cout << "Échec: test_derive_binary" << endl;
+    }
 }
