@@ -341,7 +341,8 @@ void Expr::derive(const Expr v)
         throw invalid_argument("Erreur (derive) : L'expression n'est pas reconnue");
         break;
     }
-
+    //on simplifie a la fin 
+    this->simplifie();
 }
 
 // modifie l’expression courante en rempla¸cant toutes les occurrences de la variable symbolique var par l’expression exp.
@@ -693,6 +694,15 @@ void Expr::simplifie_binary()
             //on remplace l'expression par la gauche
             *this = *gauche;
         }
+        //si l'expression de droite est "Neg"
+        else if (droite->nature == Unary_op && droite->value.unaryOpValue == Neg)
+        {
+            //on remplace le Add par Sub est un met le fils gauche de sub a la place de droite
+            //construcetur de copie
+            Expr droite_tmp(*(droite->gauche));
+            Expr gauche_tmp(*gauche);
+            *this = Expr(Sub, gauche_tmp, droite_tmp);
+        }
         break;
     // Simplification de l'opération Sub (soustraction)
     case Sub:
@@ -740,6 +750,13 @@ void Expr::simplifie_binary()
         {
             //on les multiplie
             *this = Expr(gauche->value.intValue * droite->value.intValue);
+        }
+        //si les deux opérande sont égale 
+        else if(*droite == *gauche)
+        {
+            // on passe a la puissance 2
+            Expr tmp_gauche(*gauche);
+            *this = Expr(Pow, tmp_gauche, Expr(2));
         }
         break;
 

@@ -27,6 +27,10 @@ int main() {
 
     test_eval();
 
+    // adecommenter si vous voulez faire ce tests
+    //tester_expressions(); 
+
+
     std::cout << std::endl;
     std::cout << "Test du sujet : " << std::endl;
     test_simplifie();

@@ -1,6 +1,7 @@
 #ifndef UNIT_TEST
 #define UNIT_TEST
 
+#include "Expr.hpp"
 
 /* test le constructeur par défaut */
 void test_constructeur_par_defaut();
@@ -52,4 +53,10 @@ void test_subs();
 
 /* Teste la fonction d'évaluation (eval) */
 void test_eval();
+
+// fonction pour afficher les détaille d'une expression
+void afficher_details(const Expr& exp, const Expr* var, const Expr& val_subs);
+
+void tester_expressions();
+
 #endif

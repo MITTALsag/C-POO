@@ -809,3 +809,70 @@ void test_eval()
         cout << "Échec : test_eval" << endl;
     }
 }
+
+
+// fonction pour afficher les détaille d'une expression
+//(val_subs doit etre une expression qui ne contient pas de var)
+void afficher_details(const Expr& exp, const Expr* var, const Expr& val_subs)
+{
+    Expr exp_simplifie = exp;
+    exp_simplifie.simplifie();
+
+    Expr exp_derive = exp;
+    exp_derive.derive(*var);
+
+    cout << endl;
+    cout << "L'expression : ";
+    exp.affiche();
+    cout << " est égal à : ";
+    exp_simplifie.affiche();
+    cout << " Après simplification." << endl;
+
+    cout << "Voici l'expression après substitution de ";
+    var->affiche();
+    cout << " par ";
+    val_subs.affiche();
+    cout << " : ";
+    exp_simplifie.subs(var, &val_subs);
+    exp_simplifie.affiche();
+    cout << endl;
+    
+    cout << "Son évaluation est : " << exp_simplifie.eval() << endl;
+    cout << "Et la dérivée de ";
+    exp.affiche();
+    cout << " par rapport à ";
+    var->affiche();
+    cout << " est : ";
+    exp_derive.affiche();
+    cout << endl;
+}
+
+// Pour afficher des résultat
+void tester_expressions() 
+{
+    Expr var_x('x');  // La variable x
+
+    // Test 1 : x + 3
+    Expr expr1(Add, var_x, Expr(3));
+    afficher_details(expr1, &var_x, Expr(2));
+
+    // Test 2 : x² + 2x + 1
+    Expr expr2(Add, Expr(Pow, var_x, Expr(2)), Expr(Add, Expr(Mul, Expr(2), var_x), Expr(1)));
+    afficher_details(expr2, &var_x, Expr(2));
+
+    // Test 3 : sin(x) + cos(x)
+    Expr expr3(Add, Expr(Sin, var_x), Expr(Cos, var_x));
+    afficher_details(expr3, &var_x, Expr(Div, Expr("pi"), Expr(4))); // π/4 pour un résultat exact
+
+    // Test 4 : e^x + ln(x)
+    Expr expr4(Add, Expr(Exp, var_x), Expr(Ln, var_x));
+    afficher_details(expr4, &var_x, Expr(1)); // ln(1) = 0 et e^1 = e
+
+    // Test 5 : sqrt(x) + x^3 - 5x
+    Expr expr5(Add, Expr(Sqrt, var_x), Expr(Sub, Expr(Pow, Expr(var_x), Expr(3)), Expr(Mul, Expr(5), var_x)));
+    afficher_details(expr5, &var_x, Expr(4)); // sqrt(4) = 2
+
+    // Test 6 : (sin(x) * cos(x)) / x^2
+    Expr expr6(Div, Expr(Mul, Expr(Sin, var_x), Expr(Cos, var_x)), Expr(Pow, var_x, Expr(2)));
+    afficher_details(expr6, &var_x, Expr(Div, Expr("pi"), Expr(6))); // π/6 pour voir une simplification trigonométrique
+}
