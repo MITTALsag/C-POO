@@ -36,7 +36,7 @@ Fenetre::Fenetre(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
 
     // grille
     grille_panel_ = new Grille_Panel(panel, -1);
-    grille_panel_->SetBackgroundColour(wxColour(50, 50, 50));
+    //grille_panel_->SetBackgroundColour(wxColour(50, 50, 50));
 
     // boutons
     wxStaticText *txtLbl_grid = new wxStaticText(panel, wxID_ANY, wxT("Grid size:"));
