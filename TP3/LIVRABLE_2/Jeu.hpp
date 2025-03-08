@@ -30,8 +30,27 @@ public:
     /* Renvoie true si la case (i,j) est occupé */
     int NbVoisins(int i, int j) const;
 
+    /* Renvoie true si la case (i,j) est occupé (est à true) */
+    bool EstOccupee(int i, int j) const { return grille.EstOccupee(i, j); }
+
     /* Renvoie wait_time */
     int get_wait_time() const { return wait_time; }
+
+    /* Renvoie le nombre de ligne et le nombre de colonne */
+    int get_ligne() const { return grille.get_ligne(); }
+    int get_colonne() const { return grille.get_colonne(); }
+
+    /* Cree une configuration aléatoire du jeu */
+    void randomize();
+
+    /* met toutes les cases a faux */
+    void reset() { grille.reset(); }
+
+    /* change le temps d'attente entre chaque generation */
+    void set_wait_time(int w) { wait_time = w; }
+
+    /* operateur d'affectation */
+    Jeu& operator=(const Jeu& j);
 
 private:
     // grille de cellule

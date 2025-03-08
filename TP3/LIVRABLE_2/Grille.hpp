@@ -42,9 +42,20 @@ public:
     /* renvoie colonne */
     int get_colonne() const { return colonne; }
 
+    /* Cree une grille aleatoire */
+    void randomize();
+
+    /* Remet toutes les cases a false */
+    void reset() { grille = vector<vector<bool>>(ligne, vector<bool>(colonne, false)); }
+
+    /* operateur d'affecation */
+    Grille& operator=(const Grille& g);
+
+    
+
 private:
-    const int ligne;
-    const int colonne;
+    int ligne;
+    int colonne;
     vector<vector<bool>> grille;
 };
 

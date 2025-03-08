@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <stdexcept>
+#include <random>
 #include "Grille.hpp"
 
 using namespace std;
@@ -73,4 +74,28 @@ int Grille::NbVoisins(int i, int j) const {
         }
     }
     return nbVoisins;
+}
+
+
+/* Cree une grille aleatoire */
+void Grille::randomize() {
+    // Initialisation du générateur de nombres aléatoires
+    random_device rd;
+    mt19937 gen(rd());  // Générateur basé sur rd()
+    uniform_int_distribution<> distrib(0, 1);  // Distribution pour obtenir 0 ou 1
+
+    for (int i = 0; i < ligne; i++) {
+        for (int j = 0; j < colonne; j++) {
+            // Générer un nombre aléatoire (0 ou 1) et assigner true ou false
+            grille[i][j] = (distrib(gen) == 1);  // true si 1, false si 0
+        }
+    }
+}
+
+/* operateur d'affecation */
+Grille& Grille::operator=(const Grille& g) {
+    ligne = g.ligne;
+    colonne = g.colonne;
+    grille = g.grille;
+    return *this;
 }

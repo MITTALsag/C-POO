@@ -58,3 +58,17 @@ void Jeu::SupprimeCellule(int i, int j) {
 int Jeu::NbVoisins(int i, int j) const {
     return grille.NbVoisins(i, j);
 }
+
+
+/* Cree une configuration aléatoire du jeu */
+void Jeu::randomize() {
+    grille.randomize();
+}
+
+/* operateur d'affectation */
+Jeu& Jeu::operator=(const Jeu& j) {
+    grille = j.grille;
+    tmp = j.tmp;
+    wait_time = j.wait_time;
+    return *this;
+}
