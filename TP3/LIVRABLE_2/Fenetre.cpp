@@ -7,18 +7,14 @@ using namespace std;
 Fenetre::Fenetre(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
     // Créer un menu déroulant 
     wxMenu* menu = new wxMenu();
-
-    // Ajouter des éléments au menu 
     menu->Append(1, wxT("&Save"));
     menu->Append(2, wxT("&Load"));
-    menu->AppendSeparator();  // Séparateur
+    menu->AppendSeparator();
     menu->Append(3, wxT("&Exit"));
 
     // Créer la barre de menu
     wxMenuBar* menuBar = new wxMenuBar();
     menuBar->Append(menu, wxT("&File"));
-
-    // Associer la barre de menu à la fenêtre
     SetMenuBar(menuBar);
 
     // Associer les événements aux éléments du menu
@@ -26,60 +22,88 @@ Fenetre::Fenetre(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
     Bind(wxEVT_MENU, &Fenetre::onLoad, this, 2);
     Bind(wxEVT_MENU, &Fenetre::OnExit, this, 3);
 
-    // panel
-    wxPanel *panel = new wxPanel(this, -1);
+    // Panel principal
+    wxPanel *panel = new wxPanel(this, wxID_ANY);
 
-    // sizer vertical
-    wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
-    // sizer horizontal
-    wxBoxSizer* hbox = new wxBoxSizer(wxHORIZONTAL);
+    // Création des sous-panels pour la mise en page
+    wxPanel *panel_left = new wxPanel(panel, wxID_ANY);
+    wxPanel *panel_right = new wxPanel(panel, wxID_ANY);
 
-    // grille
-    grille_panel_ = new Grille_Panel(panel, -1);
-    //grille_panel_->SetBackgroundColour(wxColour(50, 50, 50));
+    // Sizer principal (horizontal pour séparer grille et boutons)
+    wxBoxSizer *main_sizer = new wxBoxSizer(wxHORIZONTAL);
 
-    // boutons
-    wxStaticText *txtLbl_grid = new wxStaticText(panel, wxID_ANY, wxT("Grid size:"));
-    spinner_ = new wxSpinCtrl(panel, wxID_ANY, wxT("30"));
-    spinner_->SetRange(10, 1000);
-    wxButton* runBtn = new wxButton(panel, wxID_ANY, wxT("Run/Pause"));
-    wxButton* stepBtn = new wxButton(panel, wxID_ANY, wxT("Step"));
-    wxButton* rndBtn = new wxButton(panel, wxID_ANY, wxT("Random"));
-    wxButton* rstBtn = new wxButton(panel, wxID_ANY, wxT("Reset"));
-    txtwait = new wxStaticText(panel, wxID_ANY, wxString::Format(wxT("Wait time: 250 ms")));
-    slider_ = new wxSlider(panel, wxID_ANY, 250, 1, 1000, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL);
+    // Sizer pour la grille
+    wxBoxSizer *grid_sizer = new wxBoxSizer(wxVERTICAL);
+    grille_panel_ = new Grille_Panel(panel_left, wxID_ANY);
+    grid_sizer->Add(grille_panel_, 1, wxEXPAND | wxALL, 5);
+    panel_left->SetSizer(grid_sizer);
 
-    // bind des evenements
+    // Sizer pour les boutons
+    wxBoxSizer *btn_sizer = new wxBoxSizer(wxVERTICAL);
+
+    // Création des contrôles
+    wxStaticText *txtLbl_grid = new wxStaticText(panel_right, wxID_ANY, wxT("Grid size:"));
+    spinner_ = new wxSpinCtrl(panel_right, wxID_ANY, wxT("30"));
+    spinner_->SetRange(10, 100);
+    wxButton* runBtn = new wxButton(panel_right, wxID_ANY, wxT("Run/Pause"));
+    wxButton* stepBtn = new wxButton(panel_right, wxID_ANY, wxT("Step"));
+    wxButton* rndBtn = new wxButton(panel_right, wxID_ANY, wxT("Random"));
+    wxButton* rstBtn = new wxButton(panel_right, wxID_ANY, wxT("Reset"));
+    txtwait = new wxStaticText(panel_right, wxID_ANY, wxString::Format(wxT("Wait time: 250 ms")));
+    slider_ = new wxSlider(panel_right, wxID_ANY, 250, 1, 1000, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL);
+    wxButton* openBtn = new wxButton(panel_right, wxID_ANY, wxT("Open File"));
+    wxButton* saveBtn = new wxButton(panel_right, wxID_ANY, wxT("Save File"));
+    wxButton* exitBtn = new wxButton(panel_right, wxID_ANY, wxT("Quit"));
+
+    // Bind des événements
     spinner_->Bind(wxEVT_SPINCTRL, &Fenetre::onSpinnerChange, this);
     runBtn->Bind(wxEVT_BUTTON, &Fenetre::onToggleRun, this);
     stepBtn->Bind(wxEVT_BUTTON, &Fenetre::onStep, this);
     rndBtn->Bind(wxEVT_BUTTON, &Fenetre::onRandom, this);
     rstBtn->Bind(wxEVT_BUTTON, &Fenetre::onReset, this);
     slider_->Bind(wxEVT_SLIDER, &Fenetre::onWaitTimeChange, this);
+    openBtn->Bind(wxEVT_BUTTON, &Fenetre::onLoad, this);
+    saveBtn->Bind(wxEVT_BUTTON, &Fenetre::onSave, this);
+    exitBtn->Bind(wxEVT_BUTTON, &Fenetre::OnExit, this);
 
-    //Ajout des elements dans la fenetre
-    hbox->Add(txtLbl_grid, 0, wxALIGN_CENTER_VERTICAL);
-    hbox->AddSpacer(10);  // Espacement de 10px
-    hbox->Add(spinner_, 0, wxALIGN_CENTER_VERTICAL);
-    hbox->AddSpacer(10);  // Espacement de 10px
-    hbox->Add(txtwait, 0, wxALIGN_CENTER_VERTICAL);
-    hbox->AddSpacer(10);  // Espacement de 10px
-    hbox->Add(slider_, 0, wxALIGN_CENTER_VERTICAL);
-    hbox->AddSpacer(20);  // Espacement de 10px
-    hbox->Add(runBtn, 0, wxALIGN_CENTER_VERTICAL);
-    hbox->AddSpacer(10);  // Espacement de 10px
-    hbox->Add(stepBtn, 0, wxALIGN_CENTER_VERTICAL);
-    hbox->AddSpacer(10);  // Espacement de 10px
-    hbox->Add(rndBtn, 0, wxALIGN_CENTER_VERTICAL);
-    hbox->AddSpacer(10);  // Espacement de 10px
-    hbox->Add(rstBtn, 0, wxALIGN_CENTER_VERTICAL);
+    // Ajout des contrôles au sizer vertical des boutons
+    btn_sizer->AddSpacer(20);  // Espace supplémentaire entre le spinner et le slider
+    btn_sizer->Add(txtLbl_grid, 0, wxALIGN_CENTER | wxALL, 5);
+    btn_sizer->Add(spinner_, 0, wxALIGN_CENTER | wxALL, 5);
+    btn_sizer->AddSpacer(40);  // Espace supplémentaire entre le spinner et le slider
 
+    btn_sizer->Add(txtwait, 0, wxALIGN_CENTER | wxALL, 5);
+    btn_sizer->Add(slider_, 0, wxEXPAND | wxALL, 5);
 
-    //Ajout des elements dans la fenetre
-    vbox->Add(hbox, 0, wxALIGN_CENTER | wxALL, 5);
-    vbox->Add(grille_panel_, 1, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 5);
-    panel->SetSizer(vbox);
+    // Espacer les boutons également
+    btn_sizer->AddSpacer(20);  // Espace entre le slider et le premier bouton
+    btn_sizer->Add(runBtn, 0, wxEXPAND | wxALL, 5);
+    btn_sizer->Add(stepBtn, 0, wxEXPAND | wxALL, 5);
+    btn_sizer->Add(rndBtn, 0, wxEXPAND | wxALL, 5);
+    btn_sizer->Add(rstBtn, 0, wxEXPAND | wxALL, 5);
 
+    // Ajouter un autre espacement avant d'ajouter le bouton Open
+    btn_sizer->AddSpacer(40);  // Espace avant le bouton Open et Save
+    btn_sizer->Add(saveBtn, 0, wxEXPAND | wxALL, 5);
+    btn_sizer->Add(openBtn, 0, wxEXPAND | wxALL, 5);
+
+    btn_sizer->AddStretchSpacer(1);  // Espace supplémentaire pour les boutons
+    btn_sizer->Add(exitBtn, 0, wxEXPAND | wxALL, 5);
+
+    // Associer le sizer aux boutons
+    panel_right->SetSizer(btn_sizer);
+    
+    // Ajouter les panels au sizer principal
+    main_sizer->Add(panel_left, 2, wxEXPAND | wxALL, 5);  // Grille prend plus de place
+    main_sizer->Add(panel_right, 1, wxEXPAND | wxALL, 5); // Boutons prennent moins de place
+
+    // Appliquer le sizer à la fenêtre
+    panel->SetSizer(main_sizer);
+
+    // Fixer la taille minimale de la fenêtre principale pour qu'elle ne devienne pas trop petite
+    this->SetMinSize(wxSize(800, 600));  // Ajustez cette taille minimale en fonction de vos boutons et autres éléments
+
+    // Taille et centrage
     this->SetClientSize(1000, 700);
     Centre();
 }
@@ -206,9 +230,6 @@ void Fenetre::onLoad(wxCommandEvent& event) {
     }
 
     spinner_->SetValue(taille);
-    slider_->SetValue(250);
-    int new_wait_time = slider_->GetValue();
-    txtwait->SetLabel(wxString::Format(wxT("Wait time: %d ms"), new_wait_time));
 }
 
 

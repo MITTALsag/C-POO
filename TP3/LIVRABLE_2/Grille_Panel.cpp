@@ -40,6 +40,8 @@ void Grille_Panel::OnPaint(wxPaintEvent &event) {
     int offset_x = (width - grid_width) / 2;   // Centrer horizontalement
     int offset_y = (height - grid_height) / 2; // Centrer verticalement
 
+    dc.SetPen(wxPen(wxColour(0, 0, 0), 1));  // Pinceau noir, épaisseur de 1 px
+
     // Dessine les cellules sous forme de rectangles
     for (int i = 0; i < cols; i++) {
         for (int j = 0; j < rows; j++) {
@@ -57,6 +59,7 @@ void Grille_Panel::OnPaint(wxPaintEvent &event) {
         }
     }
 }
+
 /* Fonction qui fait avancer le jeu */
 void Grille_Panel::OnTimer(wxTimerEvent &event) {
     jeu.Avance();
@@ -64,30 +67,43 @@ void Grille_Panel::OnTimer(wxTimerEvent &event) {
     Refresh();
 }
 
-/* Fonction qui gere le click de la souris */
+/* Fonction qui gère le clic de la souris */
 void Grille_Panel::OnMouseClick(wxMouseEvent &event) {
-    // taille de la fenetre
+    // Taille de la fenêtre
     wxSize size = GetClientSize();
     int width = size.GetWidth();
     int height = size.GetHeight();
 
-    // taille des cellules
+    // Taille des cellules
     int cell_width = width / jeu.get_colonne();
     int cell_height = height / jeu.get_ligne();
 
-    // position de la souris
-    int x = event.GetX() / cell_width;
-    int y = event.GetY() / cell_height;
+    // Position de la souris
+    int mouse_x = event.GetX();
+    int mouse_y = event.GetY();
 
-    // si la case est occupé on la supprime sinon on l'ajoute
-    if(jeu.EstOccupee(x, y)) {
-        jeu.SupprimeCellule(x, y);
-    } else {
-        jeu.AjouteCellule(x, y);
+    // Calcul du décalage pour centrer la grille
+    int offset_x = (width - (cell_width * jeu.get_colonne())) / 2;
+    int offset_y = (height - (cell_height * jeu.get_ligne())) / 2;
+
+    // Calcul de la position de la cellule cliquée en fonction du décalage
+    int x = (mouse_x - offset_x) / cell_width;
+    int y = (mouse_y - offset_y) / cell_height;
+
+    // Vérifier si le clic est dans la grille valide
+    if (x >= 0 && x < jeu.get_colonne() && y >= 0 && y < jeu.get_ligne()) {
+        // Si la case est occupée, on la supprime, sinon on l'ajoute
+        if (jeu.EstOccupee(x, y)) {
+            jeu.SupprimeCellule(x, y);
+        } else {
+            jeu.AjouteCellule(x, y);
+        }
     }
 
+    // Rafraîchir pour redessiner la grille après le clic
     Refresh();
 }
+
 
 /* Fonction qui gere le redimensionnement de la fenetre */
 void Grille_Panel::OnResize(wxSizeEvent &event) {
@@ -200,7 +216,7 @@ int Grille_Panel::load(string filename) {
     file >> ligne >> colonne;
     
     // changement de la taille de la grille
-    jeu = Jeu(ligne, colonne);
+    jeu = Jeu(ligne, colonne, jeu.get_wait_time()); 
     char c;
     
     // lecture de la grille
