@@ -40,7 +40,10 @@ private:
     wxTimer* timer;
 
     /* Fonction qui dessine la grille */
-    void OnPaint(wxPaintEvent &event);
+    void OnPaintRectangle(wxPaintEvent &event);
+
+    /* Fonction qui dessine la grille */
+    void OnPaintCircle(wxPaintEvent &event);
 
     /* Fonction qui fait avancer le jeu */
     void OnTimer(wxTimerEvent &event);

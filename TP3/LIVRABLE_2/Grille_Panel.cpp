@@ -10,15 +10,16 @@ Grille_Panel::Grille_Panel(wxPanel *parent, int id) : wxPanel(parent, id, wxDefa
     timer = new wxTimer(this);
 
     // bind des evenements
-    this->Bind(wxEVT_PAINT, &Grille_Panel::OnPaint, this);
+    this->Bind(wxEVT_PAINT, &Grille_Panel::OnPaintCircle, this);
+    //this->Bind(wxEVT_PAINT, &Grille_Panel::OnPaintRectangle, this);
     this->Bind(wxEVT_TIMER, &Grille_Panel::OnTimer, this);
     this->Bind(wxEVT_LEFT_DOWN, &Grille_Panel::OnMouseClick, this);
     this->Bind(wxEVT_SIZE, &Grille_Panel::OnResize, this);
 
 }
 
-/* Fonction qui dessine la grille */
-void Grille_Panel::OnPaint(wxPaintEvent &event) {
+/* Fonction qui dessine la grille en rectangle */
+void Grille_Panel::OnPaintRectangle(wxPaintEvent &event) {
     wxPaintDC dc(this);
     (void) event; // évite le warning unused parameter
 
@@ -60,6 +61,50 @@ void Grille_Panel::OnPaint(wxPaintEvent &event) {
     }
 }
 
+
+/* Fonction qui dessine la grille avec des disques */
+void Grille_Panel::OnPaintCircle(wxPaintEvent &event) {
+    wxPaintDC dc(this);
+    (void) event; // évite le warning unused parameter
+
+    // Taille du panel
+    wxSize size = GetClientSize();
+    int width = size.GetWidth();
+    int height = size.GetHeight();
+
+    int cols = jeu.get_colonne();
+    int rows = jeu.get_ligne();
+
+    // Taille ajustée pour éviter les bordures
+    int cell_width = width / cols;
+    int cell_height = height / rows;
+
+    int grid_width = cell_width * cols;   // Largeur ajustée
+    int grid_height = cell_height * rows; // Hauteur ajustée
+
+    int offset_x = (width - grid_width) / 2;   // Centrer horizontalement
+    int offset_y = (height - grid_height) / 2; // Centrer verticalement
+
+    dc.SetPen(wxPen(wxColour(0, 0, 0), 1));  // Pinceau noir, épaisseur de 1 px
+
+    // Dessine les cellules sous forme de cercles
+    for (int i = 0; i < cols; i++) {
+        for (int j = 0; j < rows; j++) {
+            int x = offset_x + i * cell_width + cell_width / 2; // Centre horizontalement
+            int y = offset_y + j * cell_height + cell_height / 2; // Centre verticalement
+            int radius = std::min(cell_width, cell_height) / 2; // Rayon du cercle (moitié de la taille de la cellule)
+
+            if (jeu.EstOccupee(i, j)) {
+                dc.SetBrush(*wxBLACK_BRUSH); // Cellule occupée en noir
+            } else {
+                dc.SetBrush(*wxWHITE_BRUSH); // Cellule vide en blanc
+            }
+
+            // Dessiner le cercle à la position calculée
+            dc.DrawCircle(x, y, radius);
+        }
+    }
+}
 /* Fonction qui fait avancer le jeu */
 void Grille_Panel::OnTimer(wxTimerEvent &event) {
     jeu.Avance();
