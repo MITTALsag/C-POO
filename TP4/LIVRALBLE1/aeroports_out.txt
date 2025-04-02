@@ -1,0 +1,3 @@
+LYS Lyon 45.7256 5.0811
+CDG Paris 49.0097 2.5478
+MRS Marseille 43.4367 5.215
