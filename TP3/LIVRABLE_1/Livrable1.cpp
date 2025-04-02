@@ -69,19 +69,12 @@ Jeu configurationUtilisateur() {
             return configurationUtilisateur();
     }
 
-
-
-
 }
-
 
 int main(){
     Jeu jeu = configurationUtilisateur();
-    int nb_max;
-    cout << "Entrez le nombre max de génération a faire (-1 pour un nombre infinie) : " << endl;
-    cin >> nb_max;
     int i = 0;
-    while(i <= nb_max){
+    while(i <= 25){
         cout << "\033[2J\033[1;1H" << "Generation " << i++ << endl;
         jeu.Affiche();
         jeu.Avance();
