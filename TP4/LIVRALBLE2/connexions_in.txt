@@ -1,3 +1,7 @@
-LYS CDG 1.0
-CDG MRS 1.5
-MRS LYS 0.75
+CDG JFK 7.5    # Paris -> New York (environ 7h30)
+CDG LHR 1.2    # Paris -> Londres (environ 1h15)
+JFK LHR 7.0    # New York -> Londres (environ 7h)
+JFK DXB 12.5   # New York -> Dubai (environ 12h30)
+LHR DXB 7.0    # Londres -> Dubai (environ 7h)
+DXB HND 9.5    # Dubai -> Tokyo (environ 9h30)
+HND CDG 12.0   # Tokyo -> Paris (environ 12h) 

@@ -61,13 +61,9 @@ public:
     // Constructeur pour un graphe vide
     Graphe(bool estOriente = false, bool estPondere = false) : oriente(estOriente), pondere(estPondere) {} 
 
-    ~Graphe() {
-        for (auto s : sommets) delete s;
-    }
-
     // Ajoute un sommet au graphe
     void ajouterSommet(Sommet* sommet) {
-        if (!sommet || sommet->getIdentificateu() == "" ) throw invalid_argument("Sommet invalide");
+        if (!sommet || sommet->getIdentificateur() == "" ) throw invalid_argument("Sommet invalide");
         // Vérifie si le sommet existe déjà
         for (auto s : sommets) {
             if (s->getIdentificateur() == sommet->getIdentificateur()) {

@@ -24,58 +24,12 @@ vector<Connexion*> chargerConnexions(const string& fichier, const vector<Aeropor
 
 void testerReseauAerien() {
     try {
-        // 1. Chargement des données
+        // 1. Chargement des données (identique)
         cout << "Chargement des aéroports..." << endl;
         auto aeroports = chargerAeroports("aeroports_in.txt");
-        
+            
         cout << "Chargement des connexions..." << endl;
         auto connexions = chargerConnexions("connexions_in.txt", aeroports);
-
-        // 2. Création du graphe avec coût basé sur la distance
-        cout << "\nCreation du graphe (pondere par distance)..." << endl;
-        Graphe<Aeroport, Connexion, string> grapheDistance(
-            aeroports, connexions, true, true,
-            [](Connexion* c) { return c->coutDistance(); }
-        );
-        grapheDistance.afficher();
-
-        // 3. Test BFS
-        cout << "\n=== PARCOURS EN LARGEUR (BFS) DEPUIS CDG ===" << endl;
-        auto bfs = grapheDistance.parcoursLargeur("CDG");
-        for (const auto& id : bfs) {
-            cout << id << " ";
-        }
-
-        // 4. Test DFS
-        cout << "\n\n=== PARCOURS EN PROFONDEUR (DFS) DEPUIS CDG ===" << endl;
-        auto dfs = grapheDistance.parcoursProfondeur("CDG");
-        for (const auto& id : dfs) {
-            cout << id << " ";
-        }
-
-        // 5. Test Kruskal (version non orientée)
-        cout << "\n\n=== ARBRE COUVRANT MINIMUM (KRUSKAL) ===" << endl;
-        Graphe<Aeroport, Connexion, string> grapheNonOriente(
-            aeroports, connexions, false, true,
-            [](Connexion* c) { return c->coutDistance(); }
-        );
-        auto arbre = grapheNonOriente.kruskal();
-        arbre.afficher();
-
-        // 6. Test Floyd-Warshall
-        cout << "\n=== PLUS COURTS CHEMINS (FLOYD-WARSHALL) ===" << endl;
-        auto distance = grapheDistance.floydWarshall();
-        
-        // Affichage de quelques durées
-        cout << "Distance CDG -> JFK: " << distance["CDG"]["JFK"] << " km" << endl;
-        cout << "Distance CDG -> HND: " << distance["CDG"]["HND"] << " km" << endl;
-        cout << "Distance JFK -> DXB: " << distance["JFK"]["DXB"] << " km" << endl;
-
-
-
-
-        // Pour duree
-        // 1. Chargement des données (identique)
 
         // 2. Création du graphe avec coût basé sur la DURÉE
         cout << "\nCreation du graphe (pondere par duree)..." << endl;
@@ -87,16 +41,19 @@ void testerReseauAerien() {
 
         // 3. Test BFS (identique structure, mais sur grapheDuree)
         cout << "\n=== PARCOURS EN LARGEUR (BFS) DEPUIS CDG - DUREES ===" << endl;
-        auto bfs2 = grapheDuree.parcoursLargeur("CDG");
-        for (const auto& id : bfs2) {
-            cout << id << " ";
+        auto bfs = grapheDuree.parcoursLargeur("CDG");
+        for (const auto& id : bfs) {
+            // Ajout du nom pour plus de clarté
+            Aeroport* a = grapheDuree.trouverSommet(id);
+            cout << id << " (" << a->getNom() << ") ";
         }
 
         // 4. Test DFS (identique structure, mais sur grapheDuree)
         cout << "\n\n=== PARCOURS EN PROFONDEUR (DFS) DEPUIS CDG - DUREES ===" << endl;
-        auto dfs2 = grapheDuree.parcoursProfondeur("CDG");
-        for (const auto& id : dfs2) {
-            cout << id << " ";
+        auto dfs = grapheDuree.parcoursProfondeur("CDG");
+        for (const auto& id : dfs) {
+            Aeroport* a = grapheDuree.trouverSommet(id);
+            cout << id << " (" << a->getNom() << ") ";
         }
 
         // 5. Test Kruskal version DURÉE
@@ -124,6 +81,8 @@ void testerReseauAerien() {
             << durees["CDG"]["JFK"] + durees["JFK"]["DXB"] + durees["DXB"]["HND"] 
             << " heures" << endl;
 
+
+        
     } catch (const exception& e) {
         cerr << "Erreur: " << e.what() << endl;
     }
